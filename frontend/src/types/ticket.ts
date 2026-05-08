@@ -57,6 +57,19 @@ export interface UpdateTicketPayload {
     description?: string
 }
 
+export interface TicketReply {
+    id: string
+    ticket_id: string
+    author: string
+    body: string
+    created_at: string
+}
+
+export interface CreateReplyPayload {
+    author: string
+    body: string
+}
+
 export interface TicketFilters {
     status?: TicketStatus | ''
     priority?: TicketPriority | ''

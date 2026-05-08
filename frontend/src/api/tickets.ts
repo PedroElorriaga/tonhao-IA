@@ -5,6 +5,8 @@ import type {
     UpdateTicketPayload,
     TicketFilters,
     PaginatedTickets,
+    TicketReply,
+    CreateReplyPayload,
 } from '@/types/ticket'
 
 export async function getTickets(filters?: TicketFilters): Promise<PaginatedTickets> {
@@ -49,4 +51,14 @@ export async function updateTicket(id: string, payload: UpdateTicketPayload): Pr
 
 export async function deleteTicket(id: string): Promise<void> {
     await client.delete(`/tickets/${id}`)
+}
+
+export async function getReplies(ticketId: string): Promise<TicketReply[]> {
+    const { data } = await client.get<TicketReply[]>(`/tickets/${ticketId}/replies`)
+    return data
+}
+
+export async function createReply(ticketId: string, payload: CreateReplyPayload): Promise<TicketReply> {
+    const { data } = await client.post<TicketReply>(`/tickets/${ticketId}/replies`, payload)
+    return data
 }

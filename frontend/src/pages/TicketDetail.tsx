@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
+import { useState } from 'react'
 import {
     ArrowLeftIcon,
     CalendarIcon,
@@ -12,11 +13,16 @@ import {
     ClockIcon,
     XCircleIcon,
     CheckIcon,
+    ChevronLeftIcon,
+    SendIcon,
 } from 'lucide-react'
-import { getTicket, updateTicket, deleteTicket } from '@/api/tickets'
+import { getTicket, updateTicket, deleteTicket, getReplies, createReply } from '@/api/tickets'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PriorityBadge } from '@/components/PriorityBadge'
 import { STATUS_FLOW, STATUS_LABELS } from '@/types/ticket'
@@ -34,6 +40,8 @@ export default function TicketDetail() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
+    const [replyAuthor, setReplyAuthor] = useState('')
+    const [replyBody, setReplyBody] = useState('')
 
     const {
         data: ticket,
@@ -61,6 +69,21 @@ export default function TicketDetail() {
         },
     })
 
+    const { data: replies = [] } = useQuery({
+        queryKey: ['replies', id],
+        queryFn: () => getReplies(id!),
+        enabled: !!id,
+    })
+
+    const { mutate: sendReply, isPending: isSending } = useMutation({
+        mutationFn: () => createReply(id!, { author: replyAuthor.trim(), body: replyBody.trim() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['replies', id] })
+            setReplyAuthor('')
+            setReplyBody('')
+        },
+    })
+
     if (isLoading) {
         return (
             <div className="mx-auto max-w-3xl space-y-4">
@@ -83,6 +106,7 @@ export default function TicketDetail() {
 
     const currentIndex = STATUS_FLOW.indexOf(ticket.status)
     const nextStatus = currentIndex < STATUS_FLOW.length - 1 ? STATUS_FLOW[currentIndex + 1] : null
+    const prevStatus = currentIndex > 0 ? STATUS_FLOW[currentIndex - 1] : null
     const isClosed = ticket.status === 'closed'
 
     return (
@@ -98,7 +122,7 @@ export default function TicketDetail() {
                 <CardHeader>
                     <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
-                            <p className="text-xs font-mono text-slate-400">#{String(ticket.id).padStart(5, '0')}</p>
+                            <p className="text-xs font-mono text-slate-400">#{ticket.id.slice(0, 8).toUpperCase()}</p>
                             <CardTitle className="mt-1 text-xl">{ticket.title}</CardTitle>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-2">
@@ -205,6 +229,20 @@ export default function TicketDetail() {
 
             {/* Actions */}
             <div className="flex flex-wrap items-center justify-between gap-3">
+                {/* Go back */}
+                {prevStatus && !isClosed && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => advanceStatus(prevStatus)}
+                        disabled={isAdvancing}
+                        className="gap-2"
+                    >
+                        <ChevronLeftIcon className="h-4 w-4" />
+                        Back to {STATUS_LABELS[prevStatus]}
+                    </Button>
+                )}
+
                 {/* Advance status */}
                 {!isClosed && nextStatus && (
                     <Button
@@ -248,6 +286,64 @@ export default function TicketDetail() {
                     {isDeleting ? 'Deleting…' : 'Delete Ticket'}
                 </Button>
             </div>
+
+            {/* Replies */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">
+                        Replies {replies.length > 0 && <span className="ml-1 text-slate-400 font-normal">({replies.length})</span>}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {replies.length === 0 && (
+                        <p className="text-sm text-slate-400 text-center py-4">No replies yet.</p>
+                    )}
+                    {replies.map((reply) => (
+                        <div key={reply.id} className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-800">{reply.author}</span>
+                                <span className="text-xs text-slate-400">
+                                    {format(new Date(reply.created_at), 'MMM d, yyyy · HH:mm')}
+                                </span>
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap text-slate-700">{reply.body}</p>
+                        </div>
+                    ))}
+
+                    <Separator />
+
+                    {/* New reply form */}
+                    <div className="space-y-3">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="reply-author">Your name</Label>
+                            <Input
+                                id="reply-author"
+                                placeholder="Agent name"
+                                value={replyAuthor}
+                                onChange={(e) => setReplyAuthor(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="reply-body">Response</Label>
+                            <Textarea
+                                id="reply-body"
+                                placeholder="Write your response to the client…"
+                                rows={4}
+                                value={replyBody}
+                                onChange={(e) => setReplyBody(e.target.value)}
+                            />
+                        </div>
+                        <Button
+                            className="gap-2"
+                            disabled={isSending || !replyAuthor.trim() || !replyBody.trim()}
+                            onClick={() => sendReply()}
+                        >
+                            <SendIcon className="h-4 w-4" />
+                            {isSending ? 'Sending…' : 'Send Reply'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }
