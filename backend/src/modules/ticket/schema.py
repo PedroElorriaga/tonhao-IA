@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Literal, Optional
 
-
 TicketStatus = Literal["open", "pending", "in_progress", "solved", "closed"]
 TicketPriority = Literal["low", "medium", "high", "critical"]
 

@@ -1,11 +1,7 @@
-import uuid
-
-from database.settings import Base
-
-from sqlalchemy import Column, String, Text, DateTime
-from sqlalchemy import Enum
+from sqlalchemy import Column, String, Text, DateTime, Enum
+from src.database.sqlite_config import Base
 from datetime import datetime, timezone
-
+import uuid
 
 class Ticket(Base):
     __tablename__ = "tickets"
