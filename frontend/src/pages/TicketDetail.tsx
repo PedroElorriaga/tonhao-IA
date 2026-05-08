@@ -98,7 +98,7 @@ export default function TicketDetail() {
                 <CardHeader>
                     <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
-                            <p className="text-xs font-mono text-slate-400">#{ticket.id.slice(0, 8)}</p>
+                            <p className="text-xs font-mono text-slate-400">#{String(ticket.id).padStart(5, '0')}</p>
                             <CardTitle className="mt-1 text-xl">{ticket.title}</CardTitle>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-2">
@@ -171,10 +171,10 @@ export default function TicketDetail() {
                                     <div className="flex flex-col items-center gap-1 flex-1">
                                         <div
                                             className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${isCompleted
-                                                    ? 'border-emerald-500 bg-emerald-500 text-white'
-                                                    : isCurrent
-                                                        ? 'border-blue-600 bg-blue-600 text-white'
-                                                        : 'border-slate-300 bg-white text-slate-400'
+                                                ? 'border-emerald-500 bg-emerald-500 text-white'
+                                                : isCurrent
+                                                    ? 'border-blue-600 bg-blue-600 text-white'
+                                                    : 'border-slate-300 bg-white text-slate-400'
                                                 }`}
                                         >
                                             {isCompleted ? (

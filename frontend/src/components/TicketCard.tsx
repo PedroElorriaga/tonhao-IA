@@ -41,7 +41,7 @@ export function TicketCard({ ticket }: TicketCardProps) {
                             <CalendarIcon className="h-3 w-3" />
                             {format(new Date(ticket.created_at), 'MMM d, yyyy')}
                         </span>
-                        <span className="ml-auto font-mono text-xs text-slate-400">#{ticket.id.slice(0, 8)}</span>
+                        <span className="ml-auto font-mono text-xs text-slate-400">#{ticket.id.slice(0, 8).toUpperCase()}</span>
                     </div>
                 </CardContent>
             </Card>

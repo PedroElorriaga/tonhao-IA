@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -30,6 +30,7 @@ type FormValues = z.infer<typeof schema>
 export default function CreateTicket() {
     const navigate = useNavigate()
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
     const {
         register,
@@ -48,11 +49,8 @@ export default function CreateTicket() {
     })
 
     function onSubmit(values: FormValues) {
-        const attachment = fileInputRef.current?.files?.[0]
-        mutate({ ...values, attachment })
+        mutate({ ...values, attachment: selectedFile ?? undefined })
     }
-
-    const selectedFile = fileInputRef.current?.files?.[0]
 
     return (
         <div className="mx-auto max-w-2xl space-y-6">
@@ -179,6 +177,7 @@ export default function CreateTicket() {
                                 type="file"
                                 className="hidden"
                                 accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+                                onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
                             />
                         </div>
 
