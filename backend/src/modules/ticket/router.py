@@ -6,9 +6,11 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from src.database.sqlite_config import get_db
-from src.modules.ticket.model import Ticket
+from src.modules.ticket.model import Ticket, TicketReply
 from src.modules.ticket.schema import (
     PaginatedTicketsResponse,
+    ReplyCreate,
+    ReplyResponse,
     TicketResponse,
     TicketStatus,
     TicketPriority,
@@ -130,3 +132,34 @@ def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
 
     db.delete(ticket)
     db.commit()
+
+
+# ── Replies ────────────────────────────────────────────────────────────────
+
+@router.get("/{ticket_id}/replies", response_model=list[ReplyResponse])
+def list_replies(ticket_id: str, db: Session = Depends(get_db)):
+    if db.get(Ticket, ticket_id) is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    return (
+        db.query(TicketReply)
+        .filter(TicketReply.ticket_id == ticket_id)
+        .order_by(TicketReply.created_at)
+        .all()
+    )
+
+
+@router.post("/{ticket_id}/replies", response_model=ReplyResponse, status_code=201)
+def create_reply(ticket_id: str, payload: ReplyCreate, db: Session = Depends(get_db)):
+    if db.get(Ticket, ticket_id) is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    reply = TicketReply(
+        id=str(uuid.uuid4()),
+        ticket_id=ticket_id,
+        author=payload.author,
+        body=payload.body,
+    )
+    db.add(reply)
+    db.commit()
+    db.refresh(reply)
+    return reply

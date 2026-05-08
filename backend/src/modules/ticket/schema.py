@@ -44,3 +44,18 @@ class PaginatedTicketsResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class ReplyCreate(BaseModel):
+    author: str
+    body: str
+
+
+class ReplyResponse(BaseModel):
+    id: str
+    ticket_id: str
+    author: str
+    body: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
