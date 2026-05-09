@@ -17,6 +17,7 @@ import {
     SendIcon,
 } from 'lucide-react'
 import { getTicket, updateTicket, deleteTicket, getReplies, createReply } from '@/api/tickets'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -40,6 +41,8 @@ export default function TicketDetail() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
+    const { user } = useAuth()
+    const isAgent = user?.role === 'agent'
     const [replyAuthor, setReplyAuthor] = useState('')
     const [replyBody, setReplyBody] = useState('')
 
@@ -165,7 +168,7 @@ export default function TicketDetail() {
                     {ticket.attachment_url && (
                         <div className="mt-4">
                             <a
-                                href={ticket.attachment_url}
+                                href={`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}${ticket.attachment_url}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
@@ -228,64 +231,66 @@ export default function TicketDetail() {
             </Card>
 
             {/* Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                {/* Go back */}
-                {prevStatus && !isClosed && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => advanceStatus(prevStatus)}
-                        disabled={isAdvancing}
-                        className="gap-2"
-                    >
-                        <ChevronLeftIcon className="h-4 w-4" />
-                        Back to {STATUS_LABELS[prevStatus]}
-                    </Button>
-                )}
+            {isAgent && (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    {/* Go back */}
+                    {prevStatus && !isClosed && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => advanceStatus(prevStatus)}
+                            disabled={isAdvancing}
+                            className="gap-2"
+                        >
+                            <ChevronLeftIcon className="h-4 w-4" />
+                            Back to {STATUS_LABELS[prevStatus]}
+                        </Button>
+                    )}
 
-                {/* Advance status */}
-                {!isClosed && nextStatus && (
-                    <Button
-                        onClick={() => advanceStatus(nextStatus)}
-                        disabled={isAdvancing}
-                        className="gap-2"
-                    >
-                        <CheckCircle2Icon className="h-4 w-4" />
-                        {isAdvancing ? 'Updating…' : `Mark as ${STATUS_LABELS[nextStatus]}`}
-                    </Button>
-                )}
+                    {/* Advance status */}
+                    {!isClosed && nextStatus && (
+                        <Button
+                            onClick={() => advanceStatus(nextStatus)}
+                            disabled={isAdvancing}
+                            className="gap-2"
+                        >
+                            <CheckCircle2Icon className="h-4 w-4" />
+                            {isAdvancing ? 'Updating…' : `Mark as ${STATUS_LABELS[nextStatus]}`}
+                        </Button>
+                    )}
 
-                {/* Jump to closed */}
-                {!isClosed && ticket.status !== 'closed' && (
+                    {/* Jump to closed */}
+                    {!isClosed && ticket.status !== 'closed' && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                if (confirm('Close this ticket? This action is final.')) {
+                                    advanceStatus('closed')
+                                }
+                            }}
+                            disabled={isAdvancing}
+                        >
+                            Close Ticket
+                        </Button>
+                    )}
+
+                    {/* Delete */}
                     <Button
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
+                        className="ml-auto"
+                        disabled={isDeleting}
                         onClick={() => {
-                            if (confirm('Close this ticket? This action is final.')) {
-                                advanceStatus('closed')
+                            if (confirm('Delete this ticket permanently? This cannot be undone.')) {
+                                remove()
                             }
                         }}
-                        disabled={isAdvancing}
                     >
-                        Close Ticket
+                        {isDeleting ? 'Deleting…' : 'Delete Ticket'}
                     </Button>
-                )}
-
-                {/* Delete */}
-                <Button
-                    variant="destructive"
-                    size="sm"
-                    className="ml-auto"
-                    disabled={isDeleting}
-                    onClick={() => {
-                        if (confirm('Delete this ticket permanently? This cannot be undone.')) {
-                            remove()
-                        }
-                    }}
-                >
-                    {isDeleting ? 'Deleting…' : 'Delete Ticket'}
-                </Button>
-            </div>
+                </div>
+            )}
 
             {/* Replies */}
             <Card>

@@ -1,6 +1,9 @@
-import { Link, useLocation } from 'react-router-dom'
-import { TicketIcon, PlusIcon, LayoutDashboardIcon } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { TicketIcon, PlusIcon, LayoutDashboardIcon, LogOutIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/context/AuthContext'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface LayoutProps {
     children: React.ReactNode
@@ -8,11 +11,18 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
     const location = useLocation()
+    const { user, logout } = useAuth()
+    const navigate = useNavigate()
 
     const navItems = [
         { to: '/', label: 'Dashboard', icon: LayoutDashboardIcon },
         { to: '/tickets/new', label: 'New Ticket', icon: PlusIcon },
     ]
+
+    async function handleLogout() {
+        await logout()
+        navigate('/login')
+    }
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -47,6 +57,27 @@ export function Layout({ children }: LayoutProps) {
                             )
                         })}
                     </nav>
+
+                    {/* User info + logout */}
+                    {user && (
+                        <div className="flex items-center gap-3">
+                            <div className="hidden sm:flex flex-col items-end leading-tight">
+                                <span className="text-sm font-medium text-slate-900">{user.name}</span>
+                                <Badge variant={user.role === 'agent' ? 'default' : 'secondary'} className="mt-0.5 text-[10px] py-0 px-1.5 h-4">
+                                    {user.role}
+                                </Badge>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Log out"
+                                onClick={handleLogout}
+                                className="text-slate-500 hover:text-slate-900"
+                            >
+                                <LogOutIcon className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </header>
 
@@ -55,3 +86,4 @@ export function Layout({ children }: LayoutProps) {
         </div>
     )
 }
+
