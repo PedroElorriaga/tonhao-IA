@@ -6,6 +6,8 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from src.database.sqlite_config import get_db
+from src.modules.auth.dependencies import get_current_user, require_agent
+from src.modules.auth.model import User
 from src.modules.ticket.model import Ticket, TicketReply
 from src.modules.ticket.schema import (
     PaginatedTicketsResponse,
@@ -17,10 +19,14 @@ from src.modules.ticket.schema import (
     TicketUpdate,
 )
 
-UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "uploads")
+UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads")
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
-router = APIRouter(prefix="/tickets", tags=["tickets"])
+router = APIRouter(
+    prefix="/tickets",
+    tags=["tickets"],
+    dependencies=[Depends(get_current_user)],  # all routes require auth
+)
 
 
 @router.get("", response_model=PaginatedTicketsResponse)
@@ -111,7 +117,12 @@ def create_ticket(
 
 
 @router.patch("/{ticket_id}", response_model=TicketResponse)
-def update_ticket(ticket_id: str, payload: TicketUpdate, db: Session = Depends(get_db)):
+def update_ticket(
+    ticket_id: str,
+    payload: TicketUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_agent),
+):
     ticket = db.get(Ticket, ticket_id)
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
@@ -125,7 +136,11 @@ def update_ticket(ticket_id: str, payload: TicketUpdate, db: Session = Depends(g
 
 
 @router.delete("/{ticket_id}", status_code=204)
-def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
+def delete_ticket(
+    ticket_id: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_agent),
+):
     ticket = db.get(Ticket, ticket_id)
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
@@ -133,8 +148,6 @@ def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
     db.delete(ticket)
     db.commit()
 
-
-# ── Replies ────────────────────────────────────────────────────────────────
 
 @router.get("/{ticket_id}/replies", response_model=list[ReplyResponse])
 def list_replies(ticket_id: str, db: Session = Depends(get_db)):
