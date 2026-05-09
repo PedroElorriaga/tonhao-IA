@@ -47,7 +47,6 @@ class PaginatedTicketsResponse(BaseModel):
 
 
 class ReplyCreate(BaseModel):
-    author: str
     body: str
 
 

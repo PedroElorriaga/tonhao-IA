@@ -43,7 +43,6 @@ export default function TicketDetail() {
     const queryClient = useQueryClient()
     const { user } = useAuth()
     const isAgent = user?.role === 'agent'
-    const [replyAuthor, setReplyAuthor] = useState('')
     const [replyBody, setReplyBody] = useState('')
 
     const {
@@ -79,10 +78,9 @@ export default function TicketDetail() {
     })
 
     const { mutate: sendReply, isPending: isSending } = useMutation({
-        mutationFn: () => createReply(id!, { author: replyAuthor.trim(), body: replyBody.trim() }),
+        mutationFn: () => createReply(id!, { body: replyBody.trim() }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['replies', id] })
-            setReplyAuthor('')
             setReplyBody('')
         },
     })
@@ -320,15 +318,6 @@ export default function TicketDetail() {
                     {/* New reply form */}
                     <div className="space-y-3">
                         <div className="space-y-1.5">
-                            <Label htmlFor="reply-author">Your name</Label>
-                            <Input
-                                id="reply-author"
-                                placeholder="Agent name"
-                                value={replyAuthor}
-                                onChange={(e) => setReplyAuthor(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-1.5">
                             <Label htmlFor="reply-body">Response</Label>
                             <Textarea
                                 id="reply-body"
@@ -340,7 +329,7 @@ export default function TicketDetail() {
                         </div>
                         <Button
                             className="gap-2"
-                            disabled={isSending || !replyAuthor.trim() || !replyBody.trim()}
+                            disabled={isSending || !replyBody.trim()}
                             onClick={() => sendReply()}
                         >
                             <SendIcon className="h-4 w-4" />

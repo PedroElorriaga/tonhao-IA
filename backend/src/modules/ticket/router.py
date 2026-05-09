@@ -162,14 +162,14 @@ def list_replies(ticket_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/{ticket_id}/replies", response_model=ReplyResponse, status_code=201)
-def create_reply(ticket_id: str, payload: ReplyCreate, db: Session = Depends(get_db)):
+def create_reply(ticket_id: str, payload: ReplyCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if db.get(Ticket, ticket_id) is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
     reply = TicketReply(
         id=str(uuid.uuid4()),
         ticket_id=ticket_id,
-        author=payload.author,
+        author=current_user.name,
         body=payload.body,
     )
     db.add(reply)

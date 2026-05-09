@@ -66,7 +66,7 @@ export interface TicketReply {
 }
 
 export interface CreateReplyPayload {
-    author: string
+    body: string
     body: string
 }
 
