@@ -62,11 +62,11 @@ export interface TicketReply {
     ticket_id: string
     author: string
     body: string
+    is_ai: boolean
     created_at: string
 }
 
 export interface CreateReplyPayload {
-    body: string
     body: string
 }
 

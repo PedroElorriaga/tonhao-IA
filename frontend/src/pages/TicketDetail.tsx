@@ -15,14 +15,15 @@ import {
     CheckIcon,
     ChevronLeftIcon,
     SendIcon,
+    SparklesIcon,
 } from 'lucide-react'
-import { getTicket, updateTicket, deleteTicket, getReplies, createReply } from '@/api/tickets'
+import { getTicket, updateTicket, deleteTicket, getReplies, createReply, triggerAiReply } from '@/api/tickets'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
+// import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PriorityBadge } from '@/components/PriorityBadge'
@@ -82,6 +83,13 @@ export default function TicketDetail() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['replies', id] })
             setReplyBody('')
+        },
+    })
+
+    const { mutate: generateAiReply, isPending: isGenerating } = useMutation({
+        mutationFn: () => triggerAiReply(id!),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['replies', id] })
         },
     })
 
@@ -273,6 +281,20 @@ export default function TicketDetail() {
                         </Button>
                     )}
 
+                    {/* Reopen */}
+                    {isClosed && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => advanceStatus('open')}
+                            disabled={isAdvancing}
+                            className="gap-2"
+                        >
+                            <CircleIcon className="h-4 w-4" />
+                            {isAdvancing ? 'Reopening…' : 'Reopen Ticket'}
+                        </Button>
+                    )}
+
                     {/* Delete */}
                     <Button
                         variant="destructive"
@@ -302,9 +324,23 @@ export default function TicketDetail() {
                         <p className="text-sm text-slate-400 text-center py-4">No replies yet.</p>
                     )}
                     {replies.map((reply) => (
-                        <div key={reply.id} className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
+                        <div
+                            key={reply.id}
+                            className={`rounded-lg border px-4 py-3 space-y-1 ${reply.is_ai
+                                ? 'border-violet-200 bg-violet-50'
+                                : 'border-slate-200 bg-slate-50'
+                                }`}
+                        >
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-slate-800">{reply.author}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-slate-800">{reply.author}</span>
+                                    {reply.is_ai && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
+                                            <SparklesIcon className="h-3 w-3" />
+                                            AI
+                                        </span>
+                                    )}
+                                </div>
                                 <span className="text-xs text-slate-400">
                                     {format(new Date(reply.created_at), 'MMM d, yyyy · HH:mm')}
                                 </span>
@@ -327,14 +363,27 @@ export default function TicketDetail() {
                                 onChange={(e) => setReplyBody(e.target.value)}
                             />
                         </div>
-                        <Button
-                            className="gap-2"
-                            disabled={isSending || !replyBody.trim()}
-                            onClick={() => sendReply()}
-                        >
-                            <SendIcon className="h-4 w-4" />
-                            {isSending ? 'Sending…' : 'Send Reply'}
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                className="gap-2"
+                                disabled={isSending || !replyBody.trim()}
+                                onClick={() => sendReply()}
+                            >
+                                <SendIcon className="h-4 w-4" />
+                                {isSending ? 'Sending…' : 'Send Reply'}
+                            </Button>
+                            {isAgent && (
+                                <Button
+                                    variant="outline"
+                                    className="gap-2 border-violet-200 text-violet-700 hover:bg-violet-50"
+                                    disabled={isGenerating}
+                                    onClick={() => generateAiReply()}
+                                >
+                                    <SparklesIcon className="h-4 w-4" />
+                                    {isGenerating ? 'Generating…' : 'Generate AI Reply'}
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </CardContent>
             </Card>

@@ -62,3 +62,8 @@ export async function createReply(ticketId: string, payload: CreateReplyPayload)
     const { data } = await client.post<TicketReply>(`/tickets/${ticketId}/replies`, payload)
     return data
 }
+
+export async function triggerAiReply(ticketId: string): Promise<TicketReply> {
+    const { data } = await client.post<TicketReply>(`/tickets/${ticketId}/ai-reply`)
+    return data
+}
