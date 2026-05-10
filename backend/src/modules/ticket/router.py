@@ -6,6 +6,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from src.database.sqlite_config import get_db
+from src.modules.agent.graph import AgentGraph
 from src.modules.auth.dependencies import get_current_user, require_agent
 from src.modules.auth.model import User
 from src.modules.ticket.model import Ticket, TicketReply
@@ -171,6 +172,37 @@ def create_reply(ticket_id: str, payload: ReplyCreate, db: Session = Depends(get
         ticket_id=ticket_id,
         author=current_user.name,
         body=payload.body,
+    )
+    db.add(reply)
+    db.commit()
+    db.refresh(reply)
+    return reply
+
+
+@router.post("/{ticket_id}/ai-reply", response_model=ReplyResponse, status_code=201)
+def ai_reply(
+    ticket_id: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_agent),
+):
+    ticket = db.get(Ticket, ticket_id)
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    graph = AgentGraph().build()
+    content = f"{ticket.title}\n\n{ticket.description or ''}"
+    result = graph.invoke({"messages": content})
+
+    ai_text = result["messages"][-1].content
+    if isinstance(ai_text, list):
+        ai_text = ai_text[0]["text"]
+
+    reply = TicketReply(
+        id=str(uuid.uuid4()),
+        ticket_id=ticket_id,
+        author="AI Assistant",
+        body=ai_text,
+        is_ai=True,
     )
     db.add(reply)
     db.commit()

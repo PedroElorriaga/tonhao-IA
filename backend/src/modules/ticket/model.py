@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, Text, DateTime, Enum
+from sqlalchemy import Boolean, Column, ForeignKey, String, Text, DateTime, Enum
 from src.database.sqlite_config import Base
 from datetime import datetime, timezone
 import uuid
@@ -25,5 +25,6 @@ class TicketReply(Base):
     ticket_id = Column(String(36), ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True)
     author = Column(String(255), nullable=False)
     body = Column(Text, nullable=False)
+    is_ai = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     

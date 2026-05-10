@@ -55,6 +55,7 @@ class ReplyResponse(BaseModel):
     ticket_id: str
     author: str
     body: str
+    is_ai: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
