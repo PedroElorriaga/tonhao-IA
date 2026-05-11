@@ -9,3 +9,5 @@ if __name__ == "__main__":
     result = graph.invoke({"messages": ticket_teste})
 
     print(Markdown(result['messages'][-1].content[0]['text']))
+
+# APENAS PARA EU TESTAR O AGENT, NÃO É PARA SER USADO EM PRODUÇÃO

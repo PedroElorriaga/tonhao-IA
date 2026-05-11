@@ -186,16 +186,26 @@ def ai_reply(
     _: User = Depends(require_agent),
 ):
     ticket = db.get(Ticket, ticket_id)
+    user_replies = db.query(TicketReply).filter(TicketReply.ticket_id == ticket_id, TicketReply.author == ticket.client_name).all()
+    user_replies_list = [r.body for r in user_replies]
+
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
     graph = AgentGraph().build()
-    content = f"{ticket.title}\n\n{ticket.description or ''}"
+    content = (f"titulo: {ticket.title}\n"
+               f"categoria: {ticket.category}\n"
+               f"descrição: {ticket.description}\n"
+               f"replies anteriores: {user_replies_list}\n"
+               )
     result = graph.invoke({"messages": content})
-
+    
     ai_text = result["messages"][-1].content
     if isinstance(ai_text, list):
         ai_text = ai_text[0]["text"]
+
+    print(ai_text)
+    return
 
     reply = TicketReply(
         id=str(uuid.uuid4()),
