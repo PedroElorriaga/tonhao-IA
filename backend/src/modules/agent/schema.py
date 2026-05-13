@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 class ExtractorSchema(BaseModel):
-    related_problem: str
-    user_actions: Optional[list[str]] = None
+    title: str
+    category: str
+    description: str
+    interaction_history: Optional[str]
+    current_status: Optional[str]

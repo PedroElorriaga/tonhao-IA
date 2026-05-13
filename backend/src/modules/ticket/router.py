@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
+from langchain_core.messages import HumanMessage
+
 from src.database.sqlite_config import get_db
 from src.modules.agent.graph import AgentGraph
 from src.modules.auth.dependencies import get_current_user, require_agent
@@ -20,7 +22,8 @@ from src.modules.ticket.schema import (
     TicketUpdate,
 )
 
-UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads")
+UPLOADS_DIR = os.path.join(os.path.dirname(
+    __file__), "..", "..", "..", "uploads")
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter(
@@ -59,7 +62,8 @@ def list_tickets(
         )
 
     total = q.count()
-    items = q.order_by(Ticket.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    items = q.order_by(Ticket.created_at.desc()).offset(
+        (page - 1) * page_size).limit(page_size).all()
 
     return PaginatedTicketsResponse(items=items, total=total, page=page, page_size=page_size)
 
@@ -88,7 +92,8 @@ def create_ticket(
     if attachment and attachment.filename:
         content = attachment.file.read()
         if len(content) > MAX_UPLOAD_BYTES:
-            raise HTTPException(status_code=413, detail="Attachment exceeds maximum allowed size")
+            raise HTTPException(
+                status_code=413, detail="Attachment exceeds maximum allowed size")
 
         ext = os.path.splitext(attachment.filename)[1]
         filename = f"{uuid.uuid4().hex}{ext}"
@@ -186,7 +191,8 @@ def ai_reply(
     _: User = Depends(require_agent),
 ):
     ticket = db.get(Ticket, ticket_id)
-    user_replies = db.query(TicketReply).filter(TicketReply.ticket_id == ticket_id, TicketReply.author == ticket.client_name).all()
+    user_replies = db.query(TicketReply).filter(
+        TicketReply.ticket_id == ticket_id, TicketReply.author == ticket.client_name).all()
     user_replies_list = [r.body for r in user_replies]
 
     if ticket is None:
@@ -198,14 +204,11 @@ def ai_reply(
                f"descrição: {ticket.description}\n"
                f"replies anteriores: {user_replies_list}\n"
                )
-    result = graph.invoke({"messages": content})
-    
+    result = graph.invoke({"messages": [HumanMessage(content=content)]})
+
     ai_text = result["messages"][-1].content
     if isinstance(ai_text, list):
         ai_text = ai_text[0]["text"]
-
-    print(ai_text)
-    return
 
     reply = TicketReply(
         id=str(uuid.uuid4()),
