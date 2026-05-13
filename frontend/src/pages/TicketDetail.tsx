@@ -334,12 +334,16 @@ export default function TicketDetail() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-medium text-slate-800">{reply.author}</span>
-                                    {reply.is_ai && (
+                                    {reply.is_ai ? (
                                         <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
                                             <SparklesIcon className="h-3 w-3" />
-                                            AI
+                                            Tonhão
                                         </span>
-                                    )}
+                                    ) : reply.author != ticket.client_name ? (
+                                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                            Tonhão Jr
+                                        </span>
+                                    ) : null}
                                 </div>
                                 <span className="text-xs text-slate-400">
                                     {format(new Date(reply.created_at), 'MMM d, yyyy · HH:mm')}
@@ -376,7 +380,7 @@ export default function TicketDetail() {
                                 <Button
                                     variant="outline"
                                     className="gap-2 border-violet-200 text-violet-700 hover:bg-violet-50"
-                                    disabled={isGenerating}
+                                    disabled={isGenerating || isClosed}
                                     onClick={() => generateAiReply()}
                                 >
                                     <SparklesIcon className="h-4 w-4" />
