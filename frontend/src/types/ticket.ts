@@ -22,9 +22,7 @@ export const TICKET_CATEGORIES = [
     'Technical Support',
     'Billing',
     'Account',
-    'Feature Request',
-    'Bug Report',
-    'General Inquiry',
+    'HR',
     'Other',
 ] as const
 
