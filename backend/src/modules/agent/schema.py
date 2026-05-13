@@ -8,3 +8,8 @@ class ExtractorSchema(BaseModel):
     description: str
     interaction_history: Optional[str]
     current_status: Optional[str]
+
+
+class NodeResponse(BaseModel):
+    response: str
+    reclassified_category: Optional[str] = None

@@ -9,14 +9,21 @@ class Extractor:
     def __init__(self, *args, **kwargs):
         self.llm = ChatGoogleGenerativeAI(*args, **kwargs)
         self.prompt = ChatPromptTemplate.from_template(
-            """Você é um extrator de informações.
-            Dada as informações do ticket abaixo, extraia as informações relevantes.
-            
+            """Você é um extrator e classificador de tickets de suporte.
+            Dada as informações do ticket abaixo, extraia e corrija as informações.
+
             {ticket}
 
-            e retorne as informações como titulo, categoria (Aqui verifique se a categoria corresponde ao problema, se não ajuste para uma dessas: "technical support", "billing", "account", "hr", "other"), descrição, historico de interações e em português. 
-            Escreva um resumo do estado atual status atual.
-            Se não tiver alguma informação, deixe em branco.
+            Regras obrigatórias:
+            - Extraia o título, descrição, histórico de interações e escreva um resumo do status atual em português.
+            - Para a categoria, IGNORE o valor fornecido no ticket e determine a categoria correta com base exclusivamente no TÍTULO e na DESCRIÇÃO do problema.
+            - A categoria DEVE ser uma dessas opções exatas (em inglês):
+                * "technical support" — problemas de TI: hardware, software, redes, wifi, acesso, dispositivos, sistemas
+                * "billing"           — faturamento: cobranças, faturas, pagamentos, reembolsos, estornos
+                * "hr"                — recursos humanos: férias, holerite, benefícios, admissão, desligamento
+                * "account"           — conta do usuário: login, senha, permissões, cadastro
+                * "other"             — qualquer assunto que não se enquadre nas categorias acima
+            - Se não houver alguma informação, deixe o campo em branco.
             """
         )
 
@@ -37,5 +44,5 @@ class Extractor:
 
         return {
             "messages": [AIMessage(content=structtured_response)],
-            "extract_ticket_data": llm_response.model_dump(),
+            "extract_ticket_data": llm_response.model_dump()
         }

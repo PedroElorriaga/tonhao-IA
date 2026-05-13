@@ -7,14 +7,18 @@ if __name__ == "__main__":
     ticket_teste = "Estou com um problema no meu computador, ele está muito lento e travando frequentemente. Já tentei reiniciar, mas não resolveu. O que posso fazer para melhorar o desempenho?"
 
     graph = AgentGraph().build()
-    content = (f"titulo: wifi\n"
-               f"categoria: Technical Support\n"
-               f"descrição: nao conecta no wifi\n"
-               f"replies anteriores: ja tentei a senha, nao conecta\n"
+    content = (f"titulo: problemas com wifi\n"
+               f"categoria: billing\n"
+               f"descrição: Nao consigo logar no wifi\n"
+               f"replies anteriores: \n"
                )
 
-    graph.invoke({"messages": [HumanMessage(content=content)]})
+    result = graph.invoke({"messages": [HumanMessage(content=content)]})
 
-    # print(Markdown(result['messages'][-1].content[0]['text']))
+    ai_text = result["messages"][-1].content
+    if isinstance(ai_text, list):
+        ai_text = ai_text[0]["text"]
+
+    print(ai_text, result["reclassified_category"], result["reroute_count"])
 
 # APENAS PARA EU TESTAR O AGENT, NÃO É PARA SER USADO EM PRODUÇÃO
