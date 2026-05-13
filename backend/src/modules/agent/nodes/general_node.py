@@ -3,11 +3,11 @@ from src.modules.agent.state import State
 from langchain_core.prompts import ChatPromptTemplate
 
 
-class TechNode:
+class GeneralNode:
     def __init__(self, *args, **kwargs):
         self.llm = ChatGoogleGenerativeAI(*args, **kwargs)
         self.prompt = ChatPromptTemplate.from_template(
-            """Você é um especialista técnico de TI.
+            """Você é um especialista em atendimento geral.
             Dada as informações abaixo, analise o problema e forneça uma solução com o passo a passo para o cliente.
             Seja claro e objetivo, forneça passos para resolução do problema e possíveis causas.
             Sem ser em markdown, apenas texto simples, mas pode listar com numeros se necessario.

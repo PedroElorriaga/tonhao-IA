@@ -14,7 +14,7 @@ class Extractor:
             
             {ticket}
 
-            e retorne as informações como titulo, categoria, descrição, historico de interações e em português. 
+            e retorne as informações como titulo, categoria (Aqui verifique se a categoria corresponde ao problema, se não ajuste para uma dessas: "technical support", "billing", "account", "hr", "other"), descrição, historico de interações e em português. 
             Escreva um resumo do estado atual status atual.
             Se não tiver alguma informação, deixe em branco.
             """

@@ -1,7 +1,6 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from src.modules.agent.state import State
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import AIMessage
 
 
 class HRNode:

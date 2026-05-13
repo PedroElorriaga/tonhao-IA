@@ -191,6 +191,11 @@ def ai_reply(
     _: User = Depends(require_agent),
 ):
     ticket = db.get(Ticket, ticket_id)
+
+    if ticket.status == "closed":
+        raise HTTPException(
+            status_code=403, detail="Cannot generate AI reply for a closed ticket")
+
     user_replies = db.query(TicketReply).filter(
         TicketReply.ticket_id == ticket_id, TicketReply.author == ticket.client_name).all()
     user_replies_list = [r.body for r in user_replies]
