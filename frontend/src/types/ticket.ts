@@ -45,7 +45,7 @@ export interface CreateTicketPayload {
     description: string
     priority: TicketPriority
     category: string
-    client_name: string
+    // client_name: string
     attachment?: File
 }
 

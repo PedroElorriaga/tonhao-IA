@@ -18,7 +18,7 @@ import type { CreateTicketPayload } from '@/types/ticket'
 const schema = z.object({
     title: z.string().min(5, 'Title must be at least 5 characters').max(150),
     description: z.string().min(10, 'Description must be at least 10 characters').max(5000),
-    client_name: z.string().min(2, 'Client name is required').max(100),
+    // client_name: z.string().min(2, 'Client name is required').max(100),
     priority: z.enum(['low', 'medium', 'high', 'critical'], {
         error: () => 'Select a priority',
     }),
@@ -66,7 +66,7 @@ export default function CreateTicket() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-                        {/* Client name */}
+                        {/* Client name
                         <div className="space-y-1.5">
                             <Label htmlFor="client_name">Your name *</Label>
                             <Input
@@ -78,7 +78,7 @@ export default function CreateTicket() {
                             {errors.client_name && (
                                 <p className="text-xs text-red-600">{errors.client_name.message}</p>
                             )}
-                        </div>
+                        </div> */}
 
                         {/* Title */}
                         <div className="space-y-1.5">
