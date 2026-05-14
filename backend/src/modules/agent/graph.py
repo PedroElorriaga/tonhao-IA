@@ -3,8 +3,9 @@ from src.modules.agent.nodes.tech_node import TechNode
 from src.modules.agent.nodes.hr_node import HRNode
 from src.modules.agent.nodes.general_node import GeneralNode
 from src.modules.agent.nodes.billing_node import BillingNode
+from src.modules.agent.rag.retriever import RetrieverNode
 from src.modules.agent.state import State
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph, END
 import os
 from dotenv import load_dotenv
 from typing import Literal
@@ -12,7 +13,7 @@ from typing import Literal
 load_dotenv()
 
 
-class AgentGraph:
+class Graph:
     def __init__(self):
         self.workflow = StateGraph(State)
 
@@ -41,6 +42,8 @@ class AgentGraph:
             "end": END
         }
 
+        retriever = RetrieverNode()
+
         extractor = Extractor(model="gemma-4-31b-it",
                               api_key=os.getenv("GEMINI_API_KEY"), temperature=0.3)
         tech_llm = TechNode(model="gemini-3.1-flash-lite",
@@ -53,6 +56,7 @@ class AgentGraph:
                                   api_key=os.getenv("GEMINI_API_KEY"), temperature=0.5)
 
         self.workflow.add_node("extractor", extractor.extract)
+        self.workflow.add_node("retriever", retriever.retrieve)
         self.workflow.add_node("tech_support_node", tech_llm.generate_response)
         self.workflow.add_node("billing_node", billing_llm.generate_response)
         self.workflow.add_node("hr_node", hr_llm.generate_response)
@@ -60,7 +64,9 @@ class AgentGraph:
 
         self.workflow.set_entry_point("extractor")
 
-        self.workflow.add_conditional_edges("extractor", self.router, {
+        self.workflow.add_edge("extractor", "retriever")
+
+        self.workflow.add_conditional_edges("retriever", self.router, {
             "tech_support": "tech_support_node",
             "billing": "billing_node",
             "hr": "hr_node",

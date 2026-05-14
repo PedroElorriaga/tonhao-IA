@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from langchain_core.messages import HumanMessage
 
 from src.database.sqlite_config import get_db
-from src.modules.agent.graph import AgentGraph
+from src.modules.agent.graph import Graph
 from src.modules.auth.dependencies import get_current_user, require_agent
 from src.modules.auth.model import User
 from src.modules.ticket.model import Ticket, TicketReply
@@ -80,11 +80,11 @@ def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
 def create_ticket(
     db: Session = Depends(get_db),
     title: str = Form(...),
-    client_name: str = Form(...),
     category: str = Form(...),
     description: str | None = Form(None),
     priority: TicketPriority = Form("medium"),
     attachment: UploadFile | None = File(None),
+    current_user: User = Depends(get_current_user),
 ):
     attachment_url: str | None = None
     attachment_name: str | None = None
@@ -109,7 +109,7 @@ def create_ticket(
     ticket = Ticket(
         id=str(uuid.uuid4()),
         title=title,
-        client_name=client_name,
+        client_name=current_user.name,
         category=category,
         description=description,
         priority=priority,
@@ -203,7 +203,7 @@ def ai_reply(
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    graph = AgentGraph().build()
+    graph = Graph().build()
     content = (f"titulo: {ticket.title}\n"
                f"categoria: {ticket.category}\n"
                f"descrição: {ticket.description}\n"

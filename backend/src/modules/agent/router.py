@@ -1,4 +1,4 @@
-from src.modules.agent.graph import AgentGraph
+from src.modules.agent.graph import Graph
 from rich import print
 from rich.markdown import Markdown
 from langchain_core.messages import HumanMessage
@@ -6,7 +6,7 @@ from langchain_core.messages import HumanMessage
 if __name__ == "__main__":
     ticket_teste = "Estou com um problema no meu computador, ele está muito lento e travando frequentemente. Já tentei reiniciar, mas não resolveu. O que posso fazer para melhorar o desempenho?"
 
-    graph = AgentGraph().build()
+    graph = Graph().build()
     content = (f"titulo: problemas com wifi\n"
                f"categoria: billing\n"
                f"descrição: Nao consigo logar no wifi\n"

@@ -2,48 +2,23 @@ import re
 from langchain_google_genai import ChatGoogleGenerativeAI
 from src.modules.agent.state import State
 from src.modules.agent.schema import NodeResponse
-from langchain_core.prompts import ChatPromptTemplate
+from src.modules.agent.prompts import tech_prompt
 from langchain_core.messages import AIMessage
 
 
 class TechNode:
     def __init__(self, *args, **kwargs):
         self.llm = ChatGoogleGenerativeAI(*args, **kwargs)
-        self.prompt = ChatPromptTemplate.from_template(
-            """Você é um especialista técnico de TI com amplo conhecimento em suporte a hardware, software, redes, sistemas operacionais, conectividade e segurança da informação.
-
-            Analise as informações do ticket abaixo e forneça uma resposta técnica clara e objetiva ao cliente.
-            Leve em consideração problemas comuns como falhas de software, conflitos de driver, problemas de rede, lentidão, erros de sistema, falhas de hardware e questões de acesso.
-
-            Regras de resposta:
-            - Escreva em texto simples, sem markdown.
-            - Pode usar listas numeradas quando necessário.
-            - Priorize soluções que o próprio usuário consiga executar sem suporte presencial.
-            - Se o problema indicar risco de perda de dados, oriente o cliente a fazer backup antes de qualquer procedimento.
-            - Se a solução exigir acesso administrativo, avise o cliente antes de listar o passo.
-            - Após cada frase introdutória de seção, pule uma linha antes de listar os itens. Cada item numerado deve estar em sua própria linha.
-
-            Comece com: "Ao analisar as informações do seu chamado, identifiquei as seguintes possíveis causas:" e liste as causas.
-            Em seguida, escreva "Para resolver o problema, siga os passos abaixo:" e liste os passos detalhados.
-            Finalize com uma frase de encerramento cordial, informando que a equipe técnica está disponível caso o problema persista.
-
-            Verificação de domínio:
-            Antes de gerar a resposta, verifique se este ticket realmente pertence ao domínio de suporte técnico de TI (hardware, software, redes, sistemas, acesso, conectividade).
-            - Se pertencer, deixe reclassified_category como null e responda normalmente.
-            - Se NÃO pertencer, defina reclassified_category com o domínio correto: "billing" (faturamento/cobranças), "hr" (recursos humanos) ou "other" (dúvidas gerais).
-              Neste caso, escreva em response apenas: "Este chamado pertence a outra área e será redirecionado."
-
-            Informações do ticket:
-            {extracted_info}
-            """
-        )
 
     def generate_response(self, state: State) -> State:
-        chain = self.prompt | self.llm.with_structured_output(NodeResponse)
+        chain = tech_prompt | self.llm.with_structured_output(NodeResponse)
         llm_response = chain.with_retry(
             stop_after_attempt=3,
             wait_exponential_jitter=True
-        ).invoke({"extracted_info": state["messages"][-1].content})
+        ).invoke({
+            "extracted_info": state["messages"][-1].content,
+            "retrieved_context": state.get("retrieved_context") or "Nenhum contexto adicional disponível.",
+        })
 
         if llm_response.reclassified_category:
             return {

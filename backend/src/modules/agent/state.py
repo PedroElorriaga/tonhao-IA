@@ -8,3 +8,4 @@ class State(TypedDict):
     extract_ticket_data: Optional[dict]
     reclassified_category: Optional[str]
     reroute_count: Optional[int]
+    retrieved_context: Optional[str]
