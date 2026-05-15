@@ -3,6 +3,7 @@ import type {
     Ticket,
     CreateTicketPayload,
     UpdateTicketPayload,
+    UpdateReplyPayload,
     TicketFilters,
     PaginatedTickets,
     TicketReply,
@@ -65,5 +66,10 @@ export async function createReply(ticketId: string, payload: CreateReplyPayload)
 
 export async function triggerAiReply(ticketId: string): Promise<TicketReply> {
     const { data } = await client.post<TicketReply>(`/tickets/${ticketId}/ai-reply`)
+    return data
+}
+
+export async function updateReply(ticketId: string, replyId: string, payload: UpdateReplyPayload): Promise<TicketReply> {
+    const { data } = await client.patch<TicketReply>(`/tickets/${ticketId}/replies/${replyId}`, payload)
     return data
 }

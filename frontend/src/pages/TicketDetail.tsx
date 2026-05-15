@@ -16,8 +16,10 @@ import {
     // ChevronLeftIcon,
     SendIcon,
     SparklesIcon,
+    PencilIcon,
+    XIcon,
 } from 'lucide-react'
-import { getTicket, updateTicket, deleteTicket, getReplies, createReply, triggerAiReply } from '@/api/tickets'
+import { getTicket, updateTicket, deleteTicket, getReplies, createReply, triggerAiReply, updateReply } from '@/api/tickets'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,9 +27,10 @@ import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 // import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PriorityBadge } from '@/components/PriorityBadge'
-import { STATUS_FLOW, STATUS_LABELS } from '@/types/ticket'
+import { STATUS_FLOW, STATUS_LABELS, TICKET_CATEGORIES } from '@/types/ticket'
 import type { TicketStatus } from '@/types/ticket'
 
 const STATUS_ICON: Record<TicketStatus, typeof CircleIcon> = {
@@ -45,6 +48,10 @@ export default function TicketDetail() {
     const { user } = useAuth()
     const isAgent = user?.role === 'agent'
     const [replyBody, setReplyBody] = useState('')
+    const [editingCategory, setEditingCategory] = useState(false)
+    const [categoryValue, setCategoryValue] = useState('')
+    const [editingReplyId, setEditingReplyId] = useState<string | null>(null)
+    const [editingReplyBody, setEditingReplyBody] = useState('')
 
     const {
         data: ticket,
@@ -90,6 +97,23 @@ export default function TicketDetail() {
         mutationFn: () => triggerAiReply(id!),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['replies', id] })
+        },
+    })
+
+    const { mutate: saveCategory, isPending: isSavingCategory } = useMutation({
+        mutationFn: (category: string) => updateTicket(id!, { category }),
+        onSuccess: (updated) => {
+            queryClient.setQueryData(['ticket', id], updated)
+            setEditingCategory(false)
+        },
+    })
+
+    const { mutate: saveAiReply, isPending: isSavingReply } = useMutation({
+        mutationFn: ({ replyId, body }: { replyId: string; body: string }) =>
+            updateReply(id!, replyId, { body }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['replies', id] })
+            setEditingReplyId(null)
         },
     })
 
@@ -146,10 +170,40 @@ export default function TicketDetail() {
                             <UserIcon className="h-4 w-4" />
                             {ticket.client_name}
                         </span>
-                        <span className="flex items-center gap-1.5">
-                            <TagIcon className="h-4 w-4" />
-                            {ticket.category}
-                        </span>
+                        {editingCategory ? (
+                            <span className="flex items-center gap-1.5 flex-wrap">
+                                <TagIcon className="h-4 w-4" />
+                                <Select
+                                    value={categoryValue}
+                                    onChange={(e) => setCategoryValue(e.target.value)}
+                                    className="h-7 w-40 py-0 text-xs"
+                                >
+                                    {TICKET_CATEGORIES.map((cat) => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </Select>
+                                <Button size="sm" className="h-6 px-2 text-xs cursor-pointer" onClick={() => saveCategory(categoryValue)} disabled={isSavingCategory}>
+                                    Save
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs cursor-pointer" onClick={() => setEditingCategory(false)}>
+                                    <XIcon className="h-3 w-3" />
+                                </Button>
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1.5">
+                                <TagIcon className="h-4 w-4" />
+                                {ticket.category}
+                                {isAgent && (
+                                    <button
+                                        className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        onClick={() => { setCategoryValue(ticket.category); setEditingCategory(true) }}
+                                        title="Edit category"
+                                    >
+                                        <PencilIcon className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                            </span>
+                        )}
                         <span className="flex items-center gap-1.5">
                             <CalendarIcon className="h-4 w-4" />
                             Created {format(new Date(ticket.created_at), 'MMM d, yyyy · HH:mm')}
@@ -346,11 +400,51 @@ export default function TicketDetail() {
                                         </span>
                                     ) : null}
                                 </div>
-                                <span className="text-xs text-slate-400">
-                                    {format(new Date(reply.created_at), 'MMM d, yyyy · HH:mm')}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    {reply.is_ai && isAgent && editingReplyId !== reply.id && (
+                                        <button
+                                            className="text-slate-400 hover:text-violet-600 cursor-pointer"
+                                            onClick={() => { setEditingReplyId(reply.id); setEditingReplyBody(reply.body) }}
+                                            title="Edit AI reply"
+                                        >
+                                            <PencilIcon className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                    <span className="text-xs text-slate-400">
+                                        {format(new Date(reply.created_at), 'MMM d, yyyy · HH:mm')}
+                                    </span>
+                                </div>
                             </div>
-                            <p className="text-sm whitespace-pre-wrap text-slate-700">{reply.body}</p>
+                            {editingReplyId === reply.id ? (
+                                <div className="space-y-2 pt-1">
+                                    <Textarea
+                                        rows={4}
+                                        value={editingReplyBody}
+                                        onChange={(e) => setEditingReplyBody(e.target.value)}
+                                        className="text-sm"
+                                    />
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            className="cursor-pointer"
+                                            disabled={isSavingReply || !editingReplyBody.trim()}
+                                            onClick={() => saveAiReply({ replyId: reply.id, body: editingReplyBody.trim() })}
+                                        >
+                                            {isSavingReply ? 'Saving…' : 'Save'}
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="cursor-pointer"
+                                            onClick={() => setEditingReplyId(null)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-sm whitespace-pre-wrap text-slate-700">{reply.body}</p>
+                            )}
                         </div>
                     ))}
 

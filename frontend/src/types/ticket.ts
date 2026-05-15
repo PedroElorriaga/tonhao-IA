@@ -53,6 +53,11 @@ export interface UpdateTicketPayload {
     status?: TicketStatus
     priority?: TicketPriority
     description?: string
+    category?: string
+}
+
+export interface UpdateReplyPayload {
+    body: string
 }
 
 export interface TicketReply {
