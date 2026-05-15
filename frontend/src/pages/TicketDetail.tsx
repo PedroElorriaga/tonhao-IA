@@ -13,7 +13,7 @@ import {
     ClockIcon,
     XCircleIcon,
     CheckIcon,
-    ChevronLeftIcon,
+    // ChevronLeftIcon,
     SendIcon,
     SparklesIcon,
 } from 'lucide-react'
@@ -121,7 +121,7 @@ export default function TicketDetail() {
     return (
         <div className="mx-auto max-w-3xl space-y-6">
             {/* Back */}
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="-ml-1">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="-ml-1 cursor-pointer">
                 <ArrowLeftIcon className="h-4 w-4" />
                 All Tickets
             </Button>
@@ -246,9 +246,9 @@ export default function TicketDetail() {
                             size="sm"
                             onClick={() => advanceStatus(prevStatus)}
                             disabled={isAdvancing}
-                            className="gap-2"
+                            className="gap-2 cursor-pointer"
                         >
-                            <ChevronLeftIcon className="h-4 w-4" />
+                            {/* <ChevronLeftIcon className="h-4 w-4" /> */}
                             Back to {STATUS_LABELS[prevStatus]}
                         </Button>
                     )}
@@ -258,7 +258,7 @@ export default function TicketDetail() {
                         <Button
                             onClick={() => advanceStatus(nextStatus)}
                             disabled={isAdvancing}
-                            className="gap-2"
+                            className="gap-2 cursor-pointer"
                         >
                             <CheckCircle2Icon className="h-4 w-4" />
                             {isAdvancing ? 'Updating…' : `Mark as ${STATUS_LABELS[nextStatus]}`}
@@ -276,6 +276,7 @@ export default function TicketDetail() {
                                 }
                             }}
                             disabled={isAdvancing}
+                            className="cursor-pointer"
                         >
                             Close Ticket
                         </Button>
@@ -288,7 +289,7 @@ export default function TicketDetail() {
                             size="sm"
                             onClick={() => advanceStatus('open')}
                             disabled={isAdvancing}
-                            className="gap-2"
+                            className="gap-2 cursor-pointer"
                         >
                             <CircleIcon className="h-4 w-4" />
                             {isAdvancing ? 'Reopening…' : 'Reopen Ticket'}
@@ -299,7 +300,7 @@ export default function TicketDetail() {
                     <Button
                         variant="destructive"
                         size="sm"
-                        className="ml-auto"
+                        className="ml-auto cursor-pointer"
                         disabled={isDeleting}
                         onClick={() => {
                             if (confirm('Delete this ticket permanently? This cannot be undone.')) {
@@ -369,7 +370,7 @@ export default function TicketDetail() {
                         </div>
                         <div className="flex gap-2">
                             <Button
-                                className="gap-2"
+                                className="gap-2 cursor-pointer"
                                 disabled={isSending || !replyBody.trim()}
                                 onClick={() => sendReply()}
                             >
@@ -379,7 +380,7 @@ export default function TicketDetail() {
                             {isAgent && (
                                 <Button
                                     variant="outline"
-                                    className="gap-2 border-violet-200 text-violet-700 hover:bg-violet-50"
+                                    className="gap-2 border-violet-200 text-violet-700 hover:bg-violet-50 cursor-pointer"
                                     disabled={isGenerating || isClosed}
                                     onClick={() => generateAiReply()}
                                 >

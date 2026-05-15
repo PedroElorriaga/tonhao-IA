@@ -72,7 +72,7 @@ export function Layout({ children }: LayoutProps) {
                                 size="icon"
                                 title="Log out"
                                 onClick={handleLogout}
-                                className="text-slate-500 hover:text-slate-900"
+                                className="text-slate-500 hover:text-slate-900 cursor-pointer"
                             >
                                 <LogOutIcon className="h-4 w-4" />
                             </Button>
