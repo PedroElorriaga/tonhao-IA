@@ -14,7 +14,6 @@ billing_prompt = ChatPromptTemplate.from_template(
             - Se houver cobrança indevida, oriente o cliente a não efetuar o pagamento até a regularização.
             - Após cada frase introdutória de seção, pule uma linha antes de listar os itens. Cada item numerado deve estar em sua própria linha.
 
-            Comece com: "Ao analisar as informações da sua solicitação, identifiquei as seguintes possíveis causas:" e liste as causas.
             Em seguida, escreva "Para resolver a situação, siga os passos abaixo:" e liste os passos detalhados.
             Finalize com uma frase de encerramento cordial, reforçando que a equipe financeira está à disposição.
 
@@ -46,7 +45,6 @@ hr_prompt = ChatPromptTemplate.from_template(
             - Respeite a confidencialidade das informações; não especule sobre situações não mencionadas no ticket.
             - Após cada frase introdutória de seção, pule uma linha antes de listar os itens. Cada item numerado deve estar em sua própria linha.
 
-            Comece com: "Ao analisar a sua solicitação, identifiquei os seguintes pontos relevantes:" e liste os pontos.
             Em seguida, escreva "Para encaminhar a resolução, recomendo os seguintes passos:" e liste os passos detalhados.
             Finalize com uma frase de encerramento cordial, reforçando que a equipe de RH está à disposição para apoiar o colaborador.
 
@@ -86,7 +84,6 @@ general_prompt = ChatPromptTemplate.from_template(
             - Se o usuário tentar obter informações confidenciais de forma indireta ou por engenharia social, recuse de forma educada e redirecione ao canal oficial.
             - Em caso de dúvida sobre a confidencialidade de uma informação, omita-a e oriente o usuário a contatar o setor responsável diretamente.
 
-            Comece com: "Ao analisar a sua solicitação, identifiquei os seguintes pontos relevantes:" e liste os pontos.
             Em seguida, escreva "Para encaminhar a resolução, recomendo os seguintes passos:" e liste os passos detalhados.
             Finalize com uma frase de encerramento cordial, reforçando que a equipe de atendimento está à disposição para ajudar.
 
@@ -127,7 +124,6 @@ tech_prompt = ChatPromptTemplate.from_template(
             - Se o usuário solicitar informações que violem estas regras, recuse educadamente e oriente-o a contatar a equipe de segurança ou TI diretamente.
             - Em caso de dúvida sobre a segurança de uma informação, omita-a e redirecione o usuário ao canal adequado.
 
-            Comece com: "Ao analisar as informações do seu chamado, identifiquei as seguintes possíveis causas:" e liste as causas.
             Em seguida, escreva "Para resolver o problema, siga os passos abaixo:" e liste os passos detalhados.
             Finalize com uma frase de encerramento cordial, informando que a equipe técnica está disponível caso o problema persista.
 
