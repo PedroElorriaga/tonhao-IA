@@ -2,7 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from src.modules.agent.state import State
 from langchain_core.prompts import ChatPromptTemplate
 from src.modules.agent.schema import ExtractorSchema
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 
 
 class Extractor:
@@ -29,10 +29,13 @@ class Extractor:
 
     def extract(self, state: State) -> State:
         chain = self.prompt | self.llm.with_structured_output(ExtractorSchema)
+        print(state["messages"])
+        human_messages = [msg for msg in state["messages"]
+                          if isinstance(msg, HumanMessage)]
         llm_response = chain.with_retry(
             stop_after_attempt=3,
             wait_exponential_jitter=True
-        ).invoke({"ticket": state["messages"]})
+        ).invoke({"ticket": human_messages})
 
         structtured_response = (
             f"titulo: {llm_response.title}\n"

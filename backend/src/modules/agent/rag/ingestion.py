@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 from pathlib import Path
 
 import chromadb
@@ -39,7 +40,9 @@ def ingest():
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            chunks = [c.strip() for c in content.split("\n\n") if c.strip()]
+            # Split by ## sections to keep tables and their headers together
+            raw_sections = re.split(r'(?=^## )', content, flags=re.MULTILINE)
+            chunks = [s.strip() for s in raw_sections if s.strip()]
 
             # Pega o nome sem extensão para usar como base dos IDs
             doc_name = Path(file_path).stem

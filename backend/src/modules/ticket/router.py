@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from langchain_core.messages import HumanMessage
 
 from src.database.sqlite_config import get_db
-from src.modules.agent.graph import Graph
+from src.modules.agent.graph import get_graph
 from src.modules.auth.dependencies import get_current_user, require_agent
 from src.modules.auth.model import User
 from src.modules.ticket.model import Ticket, TicketReply
@@ -16,6 +16,7 @@ from src.modules.ticket.schema import (
     PaginatedTicketsResponse,
     ReplyCreate,
     ReplyResponse,
+    ReplyUpdate,
     TicketResponse,
     TicketStatus,
     TicketPriority,
@@ -184,6 +185,27 @@ def create_reply(ticket_id: str, payload: ReplyCreate, db: Session = Depends(get
     return reply
 
 
+@router.patch("/{ticket_id}/replies/{reply_id}", response_model=ReplyResponse)
+def update_reply(
+    ticket_id: str,
+    reply_id: str,
+    payload: ReplyUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_agent),
+):
+    reply = db.get(TicketReply, reply_id)
+    if reply is None or reply.ticket_id != ticket_id:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    if not reply.is_ai:
+        raise HTTPException(
+            status_code=403, detail="Only AI replies can be edited")
+
+    reply.body = payload.body
+    db.commit()
+    db.refresh(reply)
+    return reply
+
+
 @router.post("/{ticket_id}/ai-reply", response_model=ReplyResponse, status_code=201)
 def ai_reply(
     ticket_id: str,
@@ -192,24 +214,45 @@ def ai_reply(
 ):
     ticket = db.get(Ticket, ticket_id)
 
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
     if ticket.status == "closed":
         raise HTTPException(
             status_code=403, detail="Cannot generate AI reply for a closed ticket")
 
-    user_replies = db.query(TicketReply).filter(
-        TicketReply.ticket_id == ticket_id, TicketReply.author == ticket.client_name).all()
-    user_replies_list = [r.body for r in user_replies]
+    last_ai_reply = (
+        db.query(TicketReply)
+        .filter(TicketReply.ticket_id == ticket_id, TicketReply.is_ai == True)
+        .order_by(TicketReply.created_at.desc())
+        .first()
+    )
 
-    if ticket is None:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+    if last_ai_reply is None:
+        content = (f"titulo: {ticket.title}\n"
+                   f"categoria: {ticket.category}\n"
+                   f"descrição: {ticket.description}\n"
+                   )
+    else:
+        new_user_replies = (
+            db.query(TicketReply)
+            .filter(
+                TicketReply.ticket_id == ticket_id,
+                TicketReply.is_ai == False,
+                TicketReply.created_at > last_ai_reply.created_at,
+            )
+            .order_by(TicketReply.created_at)
+            .all()
+        )
+        if not new_user_replies:
+            raise HTTPException(
+                status_code=400, detail="No new user replies to respond to")
 
-    graph = Graph().build()
-    content = (f"titulo: {ticket.title}\n"
-               f"categoria: {ticket.category}\n"
-               f"descrição: {ticket.description}\n"
-               f"replies anteriores: {user_replies_list}\n"
-               )
-    result = graph.invoke({"messages": [HumanMessage(content=content)]})
+        content = "\n".join(r.body for r in new_user_replies)
+
+    graph = get_graph()
+    result = graph.invoke(
+        {"messages": [HumanMessage(content=content)]}, config={"configurable": {"thread_id": ticket_id}})
 
     ai_text = result["messages"][-1].content
     if isinstance(ai_text, list):

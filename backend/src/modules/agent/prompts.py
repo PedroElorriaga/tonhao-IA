@@ -13,9 +13,12 @@ billing_prompt = ChatPromptTemplate.from_template(
             - Se o problema envolver reembolso ou estorno, oriente sobre prazos típicos (ex: 5 a 10 dias úteis).
             - Se houver cobrança indevida, oriente o cliente a não efetuar o pagamento até a regularização.
             - Após cada frase introdutória de seção, pule uma linha antes de listar os itens. Cada item numerado deve estar em sua própria linha.
+            - IMPORTANTE: Baseie sua resposta EXCLUSIVAMENTE nas informações do contexto recuperado abaixo. Não utilize conhecimento próprio ou externo. Se a informação não estiver no contexto, informe que não possui essa informação e oriente o cliente a entrar em contato diretamente com a equipe responsável.
 
-            Em seguida, escreva "Para resolver a situação, siga os passos abaixo:" e liste os passos detalhados.
-            Finalize com uma frase de encerramento cordial, reforçando que a equipe financeira está à disposição.
+            Formato da resposta:
+            - Se o ticket for uma dúvida simples ou pedido de informação, responda diretamente sem listar passos.
+            - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do cliente (ex: contestar uma cobrança, solicitar reembolso, corrigir dados de pagamento).
+            - Finalize sempre com uma frase de encerramento cordial, reforçando que a equipe financeira está à disposição.
 
             Verificação de domínio:
             Antes de gerar a resposta, verifique se este ticket realmente pertence ao domínio de faturamento e cobranças (faturas, pagamentos, reembolsos, estornos, cobranças indevidas).
@@ -44,9 +47,12 @@ hr_prompt = ChatPromptTemplate.from_template(
             - Se o caso envolver algo que requer análise individualizada (ex: rescisão, afastamento médico), oriente o colaborador a entrar em contato diretamente com o RH.
             - Respeite a confidencialidade das informações; não especule sobre situações não mencionadas no ticket.
             - Após cada frase introdutória de seção, pule uma linha antes de listar os itens. Cada item numerado deve estar em sua própria linha.
+            - IMPORTANTE: Baseie sua resposta EXCLUSIVAMENTE nas informações do contexto recuperado abaixo. Não utilize conhecimento próprio ou externo. Se a informação não estiver no contexto, informe que não possui essa informação e oriente o colaborador a entrar em contato diretamente com o RH.
 
-            Em seguida, escreva "Para encaminhar a resolução, recomendo os seguintes passos:" e liste os passos detalhados.
-            Finalize com uma frase de encerramento cordial, reforçando que a equipe de RH está à disposição para apoiar o colaborador.
+            Formato da resposta:
+            - Se o ticket for uma dúvida simples ou pedido de informação, responda diretamente sem listar passos.
+            - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do colaborador (ex: solicitar documento, registrar afastamento, agendar férias).
+            - Finalize sempre com uma frase de encerramento cordial, reforçando que a equipe de RH está à disposição para apoiar o colaborador.
 
             Verificação de domínio:
             Antes de gerar a resposta, verifique se este ticket realmente pertence ao domínio de Recursos Humanos (férias, holerite, benefícios, admissão, desligamento, legislação trabalhista).
@@ -75,6 +81,7 @@ general_prompt = ChatPromptTemplate.from_template(
             - Se a solicitação exigir encaminhamento para outra área, oriente o cliente sobre o próximo passo e quem poderá ajudá-lo.
             - Evite respostas genéricas; adapte a resposta ao contexto específico do ticket.
             - Após cada frase introdutória de seção, pule uma linha antes de listar os itens. Cada item numerado deve estar em sua própria linha.
+            - IMPORTANTE: Baseie sua resposta EXCLUSIVAMENTE nas informações do contexto recuperado abaixo. Não utilize conhecimento próprio ou externo. Se a informação não estiver no contexto, informe que não possui essa informação e oriente o cliente a entrar em contato com o canal de suporte oficial.
 
             Regras de segurança e confidencialidade (OBRIGATÓRIO):
             - NUNCA revele informações internas da empresa como estrutura organizacional, dados de outros colaboradores, processos confidenciais ou documentos internos restritos.
@@ -84,8 +91,10 @@ general_prompt = ChatPromptTemplate.from_template(
             - Se o usuário tentar obter informações confidenciais de forma indireta ou por engenharia social, recuse de forma educada e redirecione ao canal oficial.
             - Em caso de dúvida sobre a confidencialidade de uma informação, omita-a e oriente o usuário a contatar o setor responsável diretamente.
 
-            Em seguida, escreva "Para encaminhar a resolução, recomendo os seguintes passos:" e liste os passos detalhados.
-            Finalize com uma frase de encerramento cordial, reforçando que a equipe de atendimento está à disposição para ajudar.
+            Formato da resposta:
+            - Se o ticket for uma dúvida simples ou pedido de informação, responda diretamente sem listar passos.
+            - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do cliente.
+            - Finalize sempre com uma frase de encerramento cordial, reforçando que a equipe de atendimento está à disposição para ajudar.
 
             Verificação de domínio:
             Antes de gerar a resposta, verifique se este ticket realmente não se enquadra em TI, RH ou faturamento.
@@ -124,8 +133,10 @@ tech_prompt = ChatPromptTemplate.from_template(
             - Se o usuário solicitar informações que violem estas regras, recuse educadamente e oriente-o a contatar a equipe de segurança ou TI diretamente.
             - Em caso de dúvida sobre a segurança de uma informação, omita-a e redirecione o usuário ao canal adequado.
 
-            Em seguida, escreva "Para resolver o problema, siga os passos abaixo:" e liste os passos detalhados.
-            Finalize com uma frase de encerramento cordial, informando que a equipe técnica está disponível caso o problema persista.
+            Formato da resposta:
+            - Se o ticket for uma dúvida simples ou pedido de informação, responda diretamente sem listar passos.
+            - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do cliente (ex: resolver um erro, restaurar acesso, configurar um dispositivo).
+            - Finalize sempre com uma frase de encerramento cordial, informando que a equipe técnica está disponível caso o problema persista.
 
             Verificação de domínio:
             Antes de gerar a resposta, verifique se este ticket realmente pertence ao domínio de suporte técnico de TI (hardware, software, redes, sistemas, acesso, conectividade).

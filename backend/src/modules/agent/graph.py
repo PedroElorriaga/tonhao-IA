@@ -6,11 +6,27 @@ from src.modules.agent.nodes.billing_node import BillingNode
 from src.modules.agent.rag.retriever import RetrieverNode
 from src.modules.agent.state import State
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.sqlite import SqliteSaver
+import sqlite3
 import os
 from dotenv import load_dotenv
 from typing import Literal
 
 load_dotenv()
+
+_graph_instance = None
+_checkpointer: SqliteSaver | None = None
+
+
+def get_graph():
+    global _graph_instance, _checkpointer
+    if _graph_instance is None:
+        db_path = os.path.join(os.path.dirname(
+            __file__), "..", "..", "..", "checkpoint.db")
+        conn = sqlite3.connect(db_path, check_same_thread=False)
+        _checkpointer = SqliteSaver(conn)
+        _graph_instance = Graph().build(_checkpointer)
+    return _graph_instance
 
 
 class Graph:
@@ -33,7 +49,7 @@ class Graph:
             return state["reclassified_category"]
         return "end"
 
-    def build(self):
+    def build(self, checkpointer: SqliteSaver | None = None):
         reroute_map = {
             "tech_support": "tech_support_node",
             "billing": "billing_node",
@@ -82,6 +98,6 @@ class Graph:
         self.workflow.add_conditional_edges(
             "other_node", self.rerouter, reroute_map)
 
-        graph = self.workflow.compile()
+        graph = self.workflow.compile(checkpointer=checkpointer)
 
         return graph

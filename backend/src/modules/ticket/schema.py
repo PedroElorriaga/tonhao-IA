@@ -50,6 +50,10 @@ class ReplyCreate(BaseModel):
     body: str
 
 
+class ReplyUpdate(BaseModel):
+    body: str
+
+
 class ReplyResponse(BaseModel):
     id: str
     ticket_id: str
