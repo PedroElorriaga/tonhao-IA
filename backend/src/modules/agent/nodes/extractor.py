@@ -29,7 +29,7 @@ class Extractor:
 
     def extract(self, state: State) -> State:
         chain = self.prompt | self.llm.with_structured_output(ExtractorSchema)
-        print(state["messages"])
+        # print(state["messages"])
         human_messages = [msg for msg in state["messages"]
                           if isinstance(msg, HumanMessage)]
         llm_response = chain.with_retry(
@@ -44,6 +44,8 @@ class Extractor:
             f"historico de interacoes: {llm_response.interaction_history}\n"
             f"status atual: {llm_response.current_status}\n"
         )
+
+        # print("Structured Response:\n", structtured_response)
 
         return {
             "messages": [AIMessage(content=structtured_response)],

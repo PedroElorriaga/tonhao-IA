@@ -8,7 +8,7 @@ from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunct
 
 CHROMA_PATH = os.getenv("CHROMA_PATH", "chroma_db")
 KNOWLEDGE_PATH = os.getenv("KNOWLEDGE_PATH", "knowledge")
-EMBED_MODEL = "all-MiniLM-L6-v2"
+EMBED_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
 COLLECTIONS = {
     "tech": "tech",

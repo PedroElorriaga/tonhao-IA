@@ -1,13 +1,15 @@
+import base64
+import mimetypes
 import os
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from langchain_core.messages import HumanMessage
 
-from src.database.sqlite_config import get_db
+from src.database.sqlite_config import SessionLocal, get_db
 from src.modules.agent.graph import get_graph
 from src.modules.auth.dependencies import get_current_user, require_agent
 from src.modules.auth.model import User
@@ -27,6 +29,41 @@ UPLOADS_DIR = os.path.join(os.path.dirname(
     __file__), "..", "..", "..", "uploads")
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
+_SUPPORTED_IMAGE_MIMES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+
+def _build_message_content(text: str, attachment_path: str | None) -> str | list:
+    """Return plain text or a multimodal list depending on the attachment type."""
+    if not attachment_path:
+        return text
+
+    mime_type, _ = mimetypes.guess_type(attachment_path)
+
+    if mime_type in _SUPPORTED_IMAGE_MIMES:
+        try:
+            with open(attachment_path, "rb") as f:
+                image_data = base64.b64encode(f.read()).decode()
+            return [
+                {"type": "text", "text": text},
+                {"type": "image_url", "image_url": {
+                    "url": f"data:{mime_type};base64,{image_data}"}},
+            ]
+        except Exception:
+            return text
+
+    if mime_type == "application/pdf":
+        try:
+            from pypdf import PdfReader
+            reader = PdfReader(attachment_path)
+            pdf_text = "\n".join(page.extract_text()
+                                 or "" for page in reader.pages)
+            return f"{text}\n\n[Conteúdo do anexo PDF]:\n{pdf_text}"
+        except Exception:
+            return text
+
+    return text
+
+
 router = APIRouter(
     prefix="/tickets",
     tags=["tickets"],
@@ -43,8 +80,12 @@ def list_tickets(
     search: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
+    user: User = Depends(get_current_user),
 ):
-    q = db.query(Ticket)
+    if user.role == "agent":
+        q = db.query(Ticket)
+    else:
+        q = db.query(Ticket).filter(Ticket.client_name == user.name)
 
     if status:
         q = q.filter(Ticket.status == status)
@@ -77,8 +118,48 @@ def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
     return ticket
 
 
+def __generate_first_ai_reply(
+    ticket_id: str,
+    title: str,
+    category: str,
+    description: str | None,
+    attachment_path: str | None = None,
+) -> None:
+    db = SessionLocal()
+    try:
+        ai_text = (
+            f"titulo: {title}\n"
+            f"categoria: {category}\n"
+            f"descrição: {description}\n"
+        )
+        message_content = _build_message_content(ai_text, attachment_path)
+        graph = get_graph()
+        result = graph.invoke(
+            {"messages": [HumanMessage(content=message_content)]},
+            config={"configurable": {"thread_id": ticket_id}},
+        )
+        ai_text = result["messages"][-1].content
+        if isinstance(ai_text, list):
+            ai_text = ai_text[0]["text"]
+
+        first_reply = TicketReply(
+            id=str(uuid.uuid4()),
+            ticket_id=ticket_id,
+            author="AI Assistant",
+            body=ai_text,
+            is_ai=True,
+        )
+        db.add(first_reply)
+        db.commit()
+    except Exception:
+        pass
+    finally:
+        db.close()
+
+
 @router.post("", response_model=TicketResponse, status_code=201)
 def create_ticket(
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     title: str = Form(...),
     category: str = Form(...),
@@ -120,6 +201,16 @@ def create_ticket(
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+
+    background_tasks.add_task(
+        __generate_first_ai_reply,
+        ticket.id,
+        ticket.title,
+        ticket.category,
+        ticket.description,
+        upload_path if attachment and attachment.filename else None,
+    )
+
     return ticket
 
 

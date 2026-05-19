@@ -9,6 +9,7 @@ billing_prompt = ChatPromptTemplate.from_template(
             Regras de resposta:
             - Escreva em texto simples, sem markdown.
             - Pode usar listas numeradas quando necessário.
+            - NÃO inicie a resposta com saudações como "Olá", "Prezado", "Bom dia" ou similares. Vá direto ao ponto.
             - Seja empático, pois questões financeiras geram preocupação no cliente.
             - Se o problema envolver reembolso ou estorno, oriente sobre prazos típicos (ex: 5 a 10 dias úteis).
             - Se houver cobrança indevida, oriente o cliente a não efetuar o pagamento até a regularização.
@@ -43,6 +44,7 @@ hr_prompt = ChatPromptTemplate.from_template(
             Regras de resposta:
             - Escreva em texto simples, sem markdown.
             - Pode usar listas numeradas quando necessário.
+            - NÃO inicie a resposta com saudações como "Olá", "Prezado", "Bom dia" ou similares. Vá direto ao ponto.
             - Seja empático e discreto, pois questões de RH podem ser sensíveis e pessoais.
             - Se o caso envolver algo que requer análise individualizada (ex: rescisão, afastamento médico), oriente o colaborador a entrar em contato diretamente com o RH.
             - Respeite a confidencialidade das informações; não especule sobre situações não mencionadas no ticket.
@@ -77,6 +79,7 @@ general_prompt = ChatPromptTemplate.from_template(
             Regras de resposta:
             - Escreva em texto simples, sem markdown.
             - Pode usar listas numeradas quando necessário.
+            - NÃO inicie a resposta com saudações como "Olá", "Prezado", "Bom dia" ou similares. Vá direto ao ponto.
             - Seja cordial e empático, pois o cliente pode estar frustrado ou confuso.
             - Se a solicitação exigir encaminhamento para outra área, oriente o cliente sobre o próximo passo e quem poderá ajudá-lo.
             - Evite respostas genéricas; adapte a resposta ao contexto específico do ticket.
@@ -119,6 +122,7 @@ tech_prompt = ChatPromptTemplate.from_template(
             Regras de resposta:
             - Escreva em texto simples, sem markdown.
             - Pode usar listas numeradas quando necessário.
+            - NÃO inicie a resposta com saudações como "Olá", "Prezado", "Bom dia" ou similares. Vá direto ao ponto.
             - Priorize soluções que o próprio usuário consiga executar sem suporte presencial.
             - Se o problema indicar risco de perda de dados, oriente o cliente a fazer backup antes de qualquer procedimento.
             - Se a solução exigir acesso administrativo, avise o cliente antes de listar o passo.

@@ -1,20 +1,24 @@
+from src.modules.agent.rag.ingestion import ingest
+from src.modules.auth.router import router as auth_router
+from src.modules.ticket.router import router as ticket_router
+from src.database.sqlite_config import Base, engine
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 import os
 
 from dotenv import load_dotenv
 load_dotenv()  # load .env before any other imports read os.environ
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
-from src.database.sqlite_config import Base, engine
-from src.modules.ticket.router import router as ticket_router
-from src.modules.auth.router import router as auth_router
 import src.modules.ticket.model  # noqa: F401
 import src.modules.auth.model  # noqa: F401 — register User with Base
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
+
+# Sync knowledge base into vector store on every startup
+ingest()
 
 UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
@@ -36,4 +40,3 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 app.include_router(auth_router)
 app.include_router(ticket_router)
-

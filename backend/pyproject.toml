@@ -21,4 +21,5 @@ dependencies = [
     "chromadb>=0.6.0",
     "sentence-transformers>=3.0.0",
     "langgraph-checkpoint-sqlite>=3.1.0",
+    "pypdf>=5.0.0",
 ]

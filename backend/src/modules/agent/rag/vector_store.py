@@ -4,7 +4,7 @@ import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
 CHROMA_PATH = os.getenv("CHROMA_PATH", "chroma_db")
-EMBED_MODEL = "all-MiniLM-L6-v2"  # Modelo de embedding do Hugging Face
+EMBED_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
 
 def get_client() -> chromadb.PersistentClient:

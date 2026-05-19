@@ -114,7 +114,7 @@ O programa **Indica Tonhão** oferece **R$ 1.500,00** de bônus ao colaborador q
 
 ---
 
-## Canais de Atendimento do RH e Contatos
+## Canais de Atendimento do RH e Contatos (e-mail, portal, WhatsApp, chamado, como entrar em contato com o RH)
 
 - **E-mail:** rh@tonhao.com.br
 - **Portal RH:** rhonline.tonhao.com.br (disponível apenas na rede interna)
