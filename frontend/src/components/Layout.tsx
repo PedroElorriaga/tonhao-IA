@@ -63,7 +63,7 @@ export function Layout({ children }: LayoutProps) {
                         <div className="flex items-center gap-3">
                             <div className="hidden sm:flex flex-col items-end leading-tight">
                                 <span className="text-sm font-medium text-slate-900">{user.name}</span>
-                                <Badge variant={user.role === 'agent' ? 'default' : 'secondary'} className="mt-0.5 text-[10px] py-0 px-1.5 h-4">
+                                <Badge variant={user.role === 'agent' ? 'default' : 'secondary'} className="mt-0.5 text-[12px] py-0 px-2.5 h-5">
                                     {user.role}
                                 </Badge>
                             </div>

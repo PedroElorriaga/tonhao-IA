@@ -52,6 +52,7 @@ export default function TicketDetail() {
     const [categoryValue, setCategoryValue] = useState('')
     const [editingReplyId, setEditingReplyId] = useState<string | null>(null)
     const [editingReplyBody, setEditingReplyBody] = useState('')
+    const [aiReplyError, setAiReplyError] = useState<string | null>(null)
 
     const {
         data: ticket,
@@ -83,6 +84,12 @@ export default function TicketDetail() {
         queryKey: ['replies', id],
         queryFn: () => getReplies(id!),
         enabled: !!id,
+        refetchInterval: (query) => {
+            const data = query.state.data
+            if (!data || !Array.isArray(data)) return 5000
+            const hasAiReply = data.some((r: { is_ai: boolean }) => r.is_ai)
+            return hasAiReply ? false : 5000
+        },
     })
 
     const { mutate: sendReply, isPending: isSending } = useMutation({
@@ -96,7 +103,16 @@ export default function TicketDetail() {
     const { mutate: generateAiReply, isPending: isGenerating } = useMutation({
         mutationFn: () => triggerAiReply(id!),
         onSuccess: () => {
+            setAiReplyError(null)
             queryClient.invalidateQueries({ queryKey: ['replies', id] })
+        },
+        onError: (error: unknown) => {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+            if (detail === 'No new user replies to respond to') {
+                setAiReplyError('The AI can only respond after a new user message. Add a reply first.')
+            } else {
+                setAiReplyError('Failed to generate AI reply. Please try again.')
+            }
         },
     })
 
@@ -375,8 +391,11 @@ export default function TicketDetail() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {replies.length === 0 && (
-                        <p className="text-sm text-slate-400 text-center py-4">No replies yet.</p>
+                    {replies.length === 0 && ticket?.status === 'open' && (
+                        <div className="flex items-center gap-2 text-sm text-slate-400 justify-center py-4">
+                            <SparklesIcon className="h-4 w-4 animate-pulse text-violet-400" />
+                            <span>Tonhão is thinking…</span>
+                        </div>
                     )}
                     {replies.map((reply) => (
                         <div
@@ -451,7 +470,7 @@ export default function TicketDetail() {
                     <Separator />
 
                     {/* New reply form */}
-                    <div className="space-y-3">
+                    <div className="space-y-3" hidden={isClosed || isGenerating}>
                         <div className="space-y-1.5">
                             <Label htmlFor="reply-body">Response</Label>
                             <Textarea
@@ -459,7 +478,7 @@ export default function TicketDetail() {
                                 placeholder="Write your response to the client…"
                                 rows={4}
                                 value={replyBody}
-                                onChange={(e) => setReplyBody(e.target.value)}
+                                onChange={(e) => { setReplyBody(e.target.value); setAiReplyError(null) }}
                             />
                         </div>
                         <div className="flex gap-2">
@@ -483,6 +502,9 @@ export default function TicketDetail() {
                                 </Button>
                             )}
                         </div>
+                        {aiReplyError && (
+                            <p className="text-sm text-red-600">{aiReplyError}</p>
+                        )}
                     </div>
                 </CardContent>
             </Card>
