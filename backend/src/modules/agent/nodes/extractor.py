@@ -1,43 +1,46 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from src.modules.agent.state import State
-from langchain_core.prompts import ChatPromptTemplate
 from src.modules.agent.schema import ExtractorSchema
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
+
+# Não é bom usar chat_template quando temos imagens ou documentos anexados, pois o modelo pode não conseguir interpretar corretamente as informações.
+SYSTEM_PROMPT = (
+    "Você é um extrator e classificador de tickets de suporte.\n"
+    "Dada as informações do ticket abaixo, extraia e corrija as informações.\n"
+    "Se houver imagem ou documento anexado, considere seu conteúdo na extração e na descrição.\n\n"
+    "Regras obrigatórias:\n"
+    "- Extraia o título, descrição, histórico de interações e escreva um resumo do status atual em português.\n"
+    "- Para o campo latest_user_question: identifique a pergunta ou solicitação MAIS RECENTE do usuário que ainda NÃO foi respondida pela IA. "
+    "Se for o primeiro contato (sem histórico), copie a descrição do problema. "
+    "Se já houve respostas anteriores, extraia APENAS o que o usuário pediu por último, ignorando o que já foi respondido.\n"
+    "- Para a categoria, IGNORE o valor fornecido no ticket e determine a categoria correta com base "
+    "exclusivamente no TÍTULO e na DESCRIÇÃO do problema.\n"
+    "- A categoria DEVE ser uma dessas opções exatas (em inglês):\n"
+    '    * "technical support" — problemas de TI: hardware, software, redes, wifi, acesso, dispositivos, sistemas\n'
+    '    * "billing"           — faturamento: cobranças, faturas, pagamentos, reembolsos, estornos\n'
+    '    * "hr"                — recursos humanos: férias, holerite, benefícios, admissão, desligamento\n'
+    '    * "account"           — conta do usuário: login, senha, permissões, cadastro\n'
+    '    * "other"             — qualquer assunto que não se enquadre nas categorias acima\n'
+    "- Se não houver alguma informação, deixe o campo em branco."
+)
 
 
 class Extractor:
     def __init__(self, *args, **kwargs):
         self.llm = ChatGoogleGenerativeAI(*args, **kwargs)
-        self.prompt = ChatPromptTemplate.from_template(
-            """Você é um extrator e classificador de tickets de suporte.
-            Dada as informações do ticket abaixo, extraia e corrija as informações.
-
-            {ticket}
-
-            Regras obrigatórias:
-            - Extraia o título, descrição, histórico de interações e escreva um resumo do status atual em português.
-            - Para a categoria, IGNORE o valor fornecido no ticket e determine a categoria correta com base exclusivamente no TÍTULO e na DESCRIÇÃO do problema.
-            - A categoria DEVE ser uma dessas opções exatas (em inglês):
-                * "technical support" — problemas de TI: hardware, software, redes, wifi, acesso, dispositivos, sistemas
-                * "billing"           — faturamento: cobranças, faturas, pagamentos, reembolsos, estornos
-                * "hr"                — recursos humanos: férias, holerite, benefícios, admissão, desligamento
-                * "account"           — conta do usuário: login, senha, permissões, cadastro
-                * "other"             — qualquer assunto que não se enquadre nas categorias acima
-            - Se não houver alguma informação, deixe o campo em branco.
-            """
-        )
 
     def extract(self, state: State) -> State:
-        chain = self.prompt | self.llm.with_structured_output(ExtractorSchema)
-        # print(state["messages"])
+        structured_llm = self.llm.with_structured_output(ExtractorSchema)
         human_messages = [msg for msg in state["messages"]
                           if isinstance(msg, HumanMessage)]
-        llm_response = chain.with_retry(
+        messages = [SystemMessage(content=SYSTEM_PROMPT)] + human_messages
+        llm_response = structured_llm.with_retry(
             stop_after_attempt=3,
             wait_exponential_jitter=True
-        ).invoke({"ticket": human_messages})
+        ).invoke(messages)
 
-        structtured_response = (
+        structured_response = (
             f"titulo: {llm_response.title}\n"
             f"categoria: {llm_response.category}\n"
             f"descricao: {llm_response.description}\n"
@@ -45,9 +48,9 @@ class Extractor:
             f"status atual: {llm_response.current_status}\n"
         )
 
-        # print("Structured Response:\n", structtured_response)
+        # print("Structured Response:\n", structured_response)
 
         return {
-            "messages": [AIMessage(content=structtured_response)],
+            "messages": [AIMessage(content=structured_response)],
             "extract_ticket_data": llm_response.model_dump()
         }
