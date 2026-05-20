@@ -470,8 +470,8 @@ export default function TicketDetail() {
                     <Separator />
 
                     {/* New reply form */}
-                    <div className="space-y-3" hidden={isClosed || isGenerating}>
-                        <div className="space-y-1.5">
+                    <div className="space-y-3">
+                        <div className="space-y-1.5" hidden={isClosed || isGenerating}>
                             <Label htmlFor="reply-body">Response</Label>
                             <Textarea
                                 id="reply-body"
