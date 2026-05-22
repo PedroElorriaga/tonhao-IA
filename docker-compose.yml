@@ -1,0 +1,29 @@
+services:
+  backend:
+    build: ./backend
+    container_name: tonhao-backend
+    restart: unless-stopped
+    env_file:
+      - path: ./backend/.env
+        required: false   # app falls back to defaults if .env is absent
+    environment:
+      DATABASE_URL: sqlite:////data/tonhao.db
+      CHECKPOINT_DB_PATH: /data/checkpoint.db
+      CHROMA_PATH: /data/chroma_db
+      UPLOADS_DIR: /data/uploads
+    volumes:
+      - tonhao-data:/data
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: tonhao-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  tonhao-data:
