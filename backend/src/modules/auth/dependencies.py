@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 from src.database.sqlite_config import get_db
 from src.modules.auth.model import User
 
-SECRET_KEY = os.environ.get("JWT_SECRET", "change-me-in-production-use-a-long-random-string")
+SECRET_KEY = os.environ.get(
+    "JWT_SECRET", "change-me-in-production-use-a-long-random-string")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("JWT_EXPIRE_MINUTES", "60"))
 COOKIE_NAME = "access_token"
@@ -25,7 +26,8 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: str, role: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + \
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {"sub": user_id, "role": role, "exp": expire}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -61,5 +63,6 @@ def get_current_user(
 
 def require_agent(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "agent":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agents only")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Agents only")
     return current_user

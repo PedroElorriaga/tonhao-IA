@@ -38,5 +38,6 @@ class TicketReply(Base):
     author = Column(String(255), nullable=False)
     body = Column(Text, nullable=False)
     is_ai = Column(Boolean, nullable=False, default=False)
+    model_used = Column(String(255), nullable=True)
     created_at = Column(DateTime, nullable=False,
                         default=lambda: datetime.now(SAO_PAULO_TZ))

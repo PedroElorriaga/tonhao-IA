@@ -25,8 +25,10 @@ from src.modules.ticket.schema import (
     TicketUpdate,
 )
 
-UPLOADS_DIR = os.path.join(os.path.dirname(
-    __file__), "..", "..", "..", "uploads")
+UPLOADS_DIR = os.getenv(
+    "UPLOADS_DIR",
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads"),
+)
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 _SUPPORTED_IMAGE_MIMES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
@@ -355,6 +357,7 @@ def ai_reply(
         author="AI Assistant",
         body=ai_text,
         is_ai=True,
+        model_used=result.get("model_used"),
     )
     db.add(reply)
     db.commit()

@@ -1,15 +1,5 @@
-import os
-import uuid
-
-from dotenv import load_dotenv
-load_dotenv()  # load .env before any other imports read os.environ
-
-import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
-
-from src.database.sqlite_config import get_db
+from src.modules.auth.schema import LoginRequest, RegisterRequest, UserResponse
+from src.modules.auth.model import User
 from src.modules.auth.dependencies import (
     COOKIE_NAME,
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -18,8 +8,17 @@ from src.modules.auth.dependencies import (
     hash_password,
     verify_password,
 )
-from src.modules.auth.model import User
-from src.modules.auth.schema import LoginRequest, RegisterRequest, UserResponse
+from src.database.sqlite_config import get_db
+from sqlalchemy.orm import Session
+from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+import httpx
+import os
+import uuid
+
+from dotenv import load_dotenv
+load_dotenv()  # load .env before any other imports read os.environ
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -44,7 +43,7 @@ _COOKIE_OPTS = dict(
 def register(payload: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     user = User(
         id=str(uuid.uuid4()),
         email=payload.email,
@@ -65,7 +64,8 @@ def register(payload: RegisterRequest, response: Response, db: Session = Depends
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        raise HTTPException(
+            status_code=401, detail="Invalid email or password")
 
     token = create_access_token(user.id, user.role)
     response.set_cookie(value=token, **_COOKIE_OPTS)
@@ -87,7 +87,8 @@ def me(current_user: User = Depends(get_current_user)):
 @router.get("/google")
 def google_login():
     if not GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=501, detail="Google OAuth is not configured")
+        raise HTTPException(
+            status_code=501, detail="Google OAuth is not configured")
 
     params = (
         f"client_id={GOOGLE_CLIENT_ID}"
@@ -102,7 +103,8 @@ def google_login():
 @router.get("/google/callback")
 def google_callback(code: str, response: Response, db: Session = Depends(get_db)):
     if not GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=501, detail="Google OAuth is not configured")
+        raise HTTPException(
+            status_code=501, detail="Google OAuth is not configured")
 
     # Exchange code for tokens
     with httpx.Client() as client:
@@ -117,13 +119,15 @@ def google_callback(code: str, response: Response, db: Session = Depends(get_db)
             },
         )
     if token_resp.status_code != 200:
-        raise HTTPException(status_code=400, detail="Failed to exchange Google code")
+        raise HTTPException(
+            status_code=400, detail="Failed to exchange Google code")
 
     id_token = token_resp.json().get("id_token")
 
     # Verify id_token via Google's tokeninfo endpoint
     with httpx.Client() as client:
-        info_resp = client.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}")
+        info_resp = client.get(
+            f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}")
     if info_resp.status_code != 200:
         raise HTTPException(status_code=400, detail="Invalid Google token")
 

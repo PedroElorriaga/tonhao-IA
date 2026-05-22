@@ -21,12 +21,6 @@ billing_prompt = ChatPromptTemplate.from_template(
             - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do cliente (ex: contestar uma cobrança, solicitar reembolso, corrigir dados de pagamento).
             - Finalize sempre com uma frase de encerramento cordial, reforçando que a equipe financeira está à disposição.
 
-            Verificação de domínio:
-            Antes de gerar a resposta, verifique se este ticket realmente pertence ao domínio de faturamento e cobranças (faturas, pagamentos, reembolsos, estornos, cobranças indevidas).
-            - Se pertencer, deixe reclassified_category como null e responda normalmente.
-            - Se NÃO pertencer, defina reclassified_category com o domínio correto: "tech_support" (suporte técnico de TI), "hr" (recursos humanos) ou "other" (dúvidas gerais).
-              Neste caso, escreva em response apenas: "Este chamado pertence a outra área e será redirecionado."
-
             Contexto relevante da base de conhecimento:
             {retrieved_context}
 
@@ -55,12 +49,6 @@ hr_prompt = ChatPromptTemplate.from_template(
             - Se o ticket for uma dúvida simples ou pedido de informação, responda diretamente sem listar passos.
             - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do colaborador (ex: solicitar documento, registrar afastamento, agendar férias).
             - Finalize sempre com uma frase de encerramento cordial, reforçando que a equipe de RH está à disposição para apoiar o colaborador.
-
-            Verificação de domínio:
-            Antes de gerar a resposta, verifique se este ticket realmente pertence ao domínio de Recursos Humanos (férias, holerite, benefícios, admissão, desligamento, legislação trabalhista).
-            - Se pertencer, deixe reclassified_category como null e responda normalmente.
-            - Se NÃO pertencer, defina reclassified_category com o domínio correto: "tech_support" (suporte técnico de TI), "billing" (faturamento/cobranças) ou "other" (dúvidas gerais).
-            Neste caso, escreva em response apenas: "Este chamado pertence a outra área e será redirecionado."
 
             Contexto relevante da base de conhecimento:
             {retrieved_context}
@@ -99,12 +87,6 @@ general_prompt = ChatPromptTemplate.from_template(
             - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do cliente.
             - Finalize sempre com uma frase de encerramento cordial, reforçando que a equipe de atendimento está à disposição para ajudar.
 
-            Verificação de domínio:
-            Antes de gerar a resposta, verifique se este ticket realmente não se enquadra em TI, RH ou faturamento.
-            - Se for realmente geral, deixe reclassified_category como null e responda normalmente.
-            - Se este ticket claramente pertencer a outra área, defina reclassified_category: "tech_support" (suporte técnico de TI), "billing" (faturamento/cobranças) ou "hr" (recursos humanos).
-              Neste caso, escreva em response apenas: "Este chamado pertence a outra área e será redirecionado."
-
             Contexto relevante da base de conhecimento:
             {retrieved_context}
 
@@ -141,12 +123,6 @@ tech_prompt = ChatPromptTemplate.from_template(
             - Se o ticket for uma dúvida simples ou pedido de informação, responda diretamente sem listar passos.
             - Apenas inclua "Para resolver a situação, recomendo os seguintes passos:" seguido de passos numerados quando o ticket realmente exigir ações concretas do cliente (ex: resolver um erro, restaurar acesso, configurar um dispositivo).
             - Finalize sempre com uma frase de encerramento cordial, informando que a equipe técnica está disponível caso o problema persista.
-
-            Verificação de domínio:
-            Antes de gerar a resposta, verifique se este ticket realmente pertence ao domínio de suporte técnico de TI (hardware, software, redes, sistemas, acesso, conectividade).
-            - Se pertencer, deixe reclassified_category como null e responda normalmente.
-            - Se NÃO pertencer, defina reclassified_category com o domínio correto: "billing" (faturamento/cobranças), "hr" (recursos humanos) ou "other" (dúvidas gerais).
-              Neste caso, escreva em response apenas: "Este chamado pertence a outra área e será redirecionado."
 
             Contexto relevante da base de conhecimento:
             {retrieved_context}

@@ -20,7 +20,8 @@ Base.metadata.create_all(bind=engine)
 # Sync knowledge base into vector store on every startup
 ingest()
 
-UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+UPLOADS_DIR = os.getenv("UPLOADS_DIR", os.path.join(
+    os.path.dirname(__file__), "uploads"))
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 app = FastAPI(

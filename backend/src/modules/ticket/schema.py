@@ -60,6 +60,7 @@ class ReplyResponse(BaseModel):
     author: str
     body: str
     is_ai: bool
+    model_used: Optional[str]
     created_at: datetime
 
     model_config = {"from_attributes": True}

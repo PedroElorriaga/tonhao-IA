@@ -20,12 +20,12 @@ class TechNode:
             "retrieved_context": state.get("retrieved_context") or "Nenhum contexto adicional disponível.",
         })
 
-        if llm_response.reclassified_category:
-            return {
-                "messages": [],
-                "reclassified_category": llm_response.reclassified_category,
-                "reroute_count": (state.get("reroute_count") or 0) + 1,
-            }
+        # if llm_response.reclassified_category:
+        #     return {
+        #         "messages": [],
+        #         "reclassified_category": llm_response.reclassified_category,
+        #         "reroute_count": (state.get("reroute_count") or 0) + 1,
+        #     }
 
         response_text = re.sub(r' (\d+\.\s)', r'\n\1', llm_response.response)
         response_text = re.sub(
@@ -33,6 +33,5 @@ class TechNode:
 
         return {
             "messages": [AIMessage(content=response_text)],
-            "reclassified_category": None,
-            "reroute_count": (state.get("reroute_count") or 0) + 1,
+            "model_used": "tech_node",
         }

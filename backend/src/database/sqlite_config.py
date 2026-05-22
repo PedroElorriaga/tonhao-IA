@@ -1,8 +1,12 @@
+import os
+
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-engine = create_engine("sqlite:///./tonhao.db",
-                       connect_args={"check_same_thread": False})
+engine = create_engine(
+    os.getenv("DATABASE_URL", "sqlite:///./tonhao.db"),
+    connect_args={"check_same_thread": False},
+)
 
 
 @event.listens_for(engine, "connect")

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+tonhao.db
+checkpoint.db
+chroma_db/
+uploads/
+.git/
