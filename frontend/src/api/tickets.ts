@@ -34,7 +34,7 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
     form.append('description', payload.description)
     form.append('priority', payload.priority)
     form.append('category', payload.category)
-    form.append('client_name', payload.client_name)
+    // form.append('client_name', payload.client_name)
     if (payload.attachment) {
         form.append('attachment', payload.attachment)
     }
